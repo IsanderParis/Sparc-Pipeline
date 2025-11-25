@@ -1,9 +1,262 @@
 
-module Target_Address()
+module Target_Address_Generator (
+    input  [31:0] PC,
+    input  [31:0] instr,
+    input         isCALL,
+    input         isBRANCH,
+    output reg [31:0] TA
+);
+
+    // CALL: disp30 = instr[31:2]
+    wire [29:0] disp30 = instr[31:2];
+    wire [31:0] call_offset = {disp30, 2'b00};
+
+    // BRANCH: disp22 = instr[21:0] (sign-extended)
+    wire signed [31:0] disp22_sext = {{10{instr[21]}}, instr[21:0]};
+    wire [31:0] br_offset = disp22_sext << 2;
+
+    always @(*) begin
+        if (isCALL)
+            TA = PC + call_offset;
+        else if (isBRANCH)
+            TA = PC + br_offset;
+        else
+            TA = 32'b0; // no usado para otras instrucciones
+    end
+
 endmodule
 
-module Register_File()
+
+`timescale 1ns/1ps
+
+// =======================================
+//  Registro de 32 bits
+// =======================================
+module reg32 (
+    input  wire        clk,
+    input  wire        ld,
+    input  wire [31:0] D,
+    output reg  [31:0] Q
+);
+    always @(posedge clk) begin
+        if (ld)
+            Q <= D;
+    end
 endmodule
+
+
+// =======================================
+//  Decoder 5-to-32
+// =======================================
+module dec5to32 (
+    input  wire [4:0]  in,
+    input  wire        en,
+    output reg  [31:0] out
+);
+    always @(*) begin
+        out = 32'b0;
+        if (en)
+            out[in] = 1'b1;
+    end
+endmodule
+
+
+// =======================================
+//  Mux 32 a 1, 32 bits
+// =======================================
+module mux32_1_32bit (
+    input  wire [31:0] in0,
+    input  wire [31:0] in1,
+    input  wire [31:0] in2,
+    input  wire [31:0] in3,
+    input  wire [31:0] in4,
+    input  wire [31:0] in5,
+    input  wire [31:0] in6,
+    input  wire [31:0] in7,
+    input  wire [31:0] in8,
+    input  wire [31:0] in9,
+    input  wire [31:0] in10,
+    input  wire [31:0] in11,
+    input  wire [31:0] in12,
+    input  wire [31:0] in13,
+    input  wire [31:0] in14,
+    input  wire [31:0] in15,
+    input  wire [31:0] in16,
+    input  wire [31:0] in17,
+    input  wire [31:0] in18,
+    input  wire [31:0] in19,
+    input  wire [31:0] in20,
+    input  wire [31:0] in21,
+    input  wire [31:0] in22,
+    input  wire [31:0] in23,
+    input  wire [31:0] in24,
+    input  wire [31:0] in25,
+    input  wire [31:0] in26,
+    input  wire [31:0] in27,
+    input  wire [31:0] in28,
+    input  wire [31:0] in29,
+    input  wire [31:0] in30,
+    input  wire [31:0] in31,
+    input  wire [4:0]  sel,
+    output reg  [31:0] out
+);
+    always @(*) begin
+        case (sel)
+            5'd0:  out = in0;
+            5'd1:  out = in1;
+            5'd2:  out = in2;
+            5'd3:  out = in3;
+            5'd4:  out = in4;
+            5'd5:  out = in5;
+            5'd6:  out = in6;
+            5'd7:  out = in7;
+            5'd8:  out = in8;
+            5'd9:  out = in9;
+            5'd10: out = in10;
+            5'd11: out = in11;
+            5'd12: out = in12;
+            5'd13: out = in13;
+            5'd14: out = in14;
+            5'd15: out = in15;
+            5'd16: out = in16;
+            5'd17: out = in17;
+            5'd18: out = in18;
+            5'd19: out = in19;
+            5'd20: out = in20;
+            5'd21: out = in21;
+            5'd22: out = in22;
+            5'd23: out = in23;
+            5'd24: out = in24;
+            5'd25: out = in25;
+            5'd26: out = in26;
+            5'd27: out = in27;
+            5'd28: out = in28;
+            5'd29: out = in29;
+            5'd30: out = in30;
+            5'd31: out = in31;
+            default: out = 32'b0;
+        endcase
+    end
+endmodule
+
+
+// =======================================
+//  Register File 32x32 con 3 puertos de lectura
+//  Entradas renombradas a RA, RB, RC.
+//  Salidas renombradas a PA, PB, PC_D.
+// =======================================
+module Register_File(
+    input  wire        clk,
+    input  wire        LE,        // load enable global
+    input  wire [4:0]  RW,        // dirección de escritura
+    input  wire [4:0]  RA,        // rs1 -> puerto A
+    input  wire [4:0]  RB,        // rs2 -> puerto B
+    input  wire [4:0]  RC,        // rc  -> puerto D
+    input  wire [31:0] PW,        // datos de escritura
+
+    output wire [31:0] PA,        // lectura puerto A
+    output wire [31:0] PB,        // lectura puerto B
+    output wire [31:0] PC_D       // lectura puerto D (antes PD)
+);
+
+    // Señales del decoder
+    wire [31:0] ld_raw;
+    wire [31:0] ld;
+
+    // Registros Q0–Q31
+    wire [31:0] q0,  q1,  q2,  q3,  q4,  q5,  q6,  q7;
+    wire [31:0] q8,  q9,  q10, q11, q12, q13, q14, q15;
+    wire [31:0] q16, q17, q18, q19, q20, q21, q22, q23;
+    wire [31:0] q24, q25, q26, q27, q28, q29, q30, q31;
+
+    // Decoder write enable
+    dec5to32 DEC (
+        .in (RW),
+        .en (LE),
+        .out(ld_raw)
+    );
+
+    // Registro 0 siempre 0 (force ld[0] = 0)
+    assign ld = { ld_raw[31:1], 1'b0 };
+    assign q0 = 32'b0;
+
+    // Registros 1 a 31
+    reg32 R1  (.clk(clk), .ld(ld[1]),  .D(PW), .Q(q1));
+    reg32 R2  (.clk(clk), .ld(ld[2]),  .D(PW), .Q(q2));
+    reg32 R3  (.clk(clk), .ld(ld[3]),  .D(PW), .Q(q3));
+    reg32 R4  (.clk(clk), .ld(ld[4]),  .D(PW), .Q(q4));
+    reg32 R5  (.clk(clk), .ld(ld[5]),  .D(PW), .Q(q5));
+    reg32 R6  (.clk(clk), .ld(ld[6]),  .D(PW), .Q(q6));
+    reg32 R7  (.clk(clk), .ld(ld[7]),  .D(PW), .Q(q7));
+    reg32 R8  (.clk(clk), .ld(ld[8]),  .D(PW), .Q(q8));
+    reg32 R9  (.clk(clk), .ld(ld[9]),  .D(PW), .Q(q9));
+    reg32 R10 (.clk(clk), .ld(ld[10]), .D(PW), .Q(q10));
+    reg32 R11 (.clk(clk), .ld(ld[11]), .D(PW), .Q(q11));
+    reg32 R12 (.clk(clk), .ld(ld[12]), .D(PW), .Q(q12));
+    reg32 R13 (.clk(clk), .ld(ld[13]), .D(PW), .Q(q13));
+    reg32 R14 (.clk(clk), .ld(ld[14]), .D(PW), .Q(q14));
+    reg32 R15 (.clk(clk), .ld(ld[15]), .D(PW), .Q(q15));
+    reg32 R16 (.clk(clk), .ld(ld[16]), .D(PW), .Q(q16));
+    reg32 R17 (.clk(clk), .ld(ld[17]), .D(PW), .Q(q17));
+    reg32 R18 (.clk(clk), .ld(ld[18]), .D(PW), .Q(q18));
+    reg32 R19 (.clk(clk), .ld(ld[19]), .D(PW), .Q(q19));
+    reg32 R20 (.clk(clk), .ld(ld[20]), .D(PW), .Q(q20));
+    reg32 R21 (.clk(clk), .ld(ld[21]), .D(PW), .Q(q21));
+    reg32 R22 (.clk(clk), .ld(ld[22]), .D(PW), .Q(q22));
+    reg32 R23 (.clk(clk), .ld(ld[23]), .D(PW), .Q(q23));
+    reg32 R24 (.clk(clk), .ld(ld[24]), .D(PW), .Q(q24));
+    reg32 R25 (.clk(clk), .ld(ld[25]), .D(PW), .Q(q25));
+    reg32 R26 (.clk(clk), .ld(ld[26]), .D(PW), .Q(q26));
+    reg32 R27 (.clk(clk), .ld(ld[27]), .D(PW), .Q(q27));
+    reg32 R28 (.clk(clk), .ld(ld[28]), .D(PW), .Q(q28));
+    reg32 R29 (.clk(clk), .ld(ld[29]), .D(PW), .Q(q29));
+    reg32 R30 (.clk(clk), .ld(ld[30]), .D(PW), .Q(q30));
+    reg32 R31 (.clk(clk), .ld(ld[31]), .D(PW), .Q(q31));
+
+    // MUX puerto A → PA (rs1)
+    mux32_1_32bit MUX_A (
+        .in0(q0),   .in1(q1),   .in2(q2),   .in3(q3),
+        .in4(q4),   .in5(q5),   .in6(q6),   .in7(q7),
+        .in8(q8),   .in9(q9),   .in10(q10), .in11(q11),
+        .in12(q12), .in13(q13), .in14(q14), .in15(q15),
+        .in16(q16), .in17(q17), .in18(q18), .in19(q19),
+        .in20(q20), .in21(q21), .in22(q22), .in23(q23),
+        .in24(q24), .in25(q25), .in26(q26), .in27(q27),
+        .in28(q28), .in29(q29), .in30(q30), .in31(q31),
+        .sel(RA),
+        .out(PA)
+    );
+
+    // MUX puerto B → PB (rs2)
+    mux32_1_32bit MUX_B (
+        .in0(q0),   .in1(q1),   .in2(q2),   .in3(q3),
+        .in4(q4),   .in5(q5),   .in6(q6),   .in7(q7),
+        .in8(q8),   .in9(q9),   .in10(q10), .in11(q11),
+        .in12(q12), .in13(q13), .in14(q14), .in15(q15),
+        .in16(q16), .in17(q17), .in18(q18), .in19(q19),
+        .in20(q20), .in21(q21), .in22(q22), .in23(q23),
+        .in24(q24), .in25(q25), .in26(q26), .in27(q27),
+        .in28(q28), .in29(q29), .in30(q30), .in31(q31),
+        .sel(RB),
+        .out(PB)
+    );
+
+    // MUX puerto D → PC_D (rc)
+    mux32_1_32bit MUX_D (
+        .in0(q0),   .in1(q1),   .in2(q2),   .in3(q3),
+        .in4(q4),   .in5(q5),   .in6(q6),   .in7(q7),
+        .in8(q8),   .in9(q9),   .in10(q10), .in11(q11),
+        .in12(q12), .in13(q13), .in14(q14), .in15(q15),
+        .in16(q16), .in17(q17), .in18(q18), .in19(q19),
+        .in20(q20), .in21(q21), .in22(q22), .in23(q23),
+        .in24(q24), .in25(q25), .in26(q26), .in27(q27),
+        .in28(q28), .in29(q29), .in30(q30), .in31(q31),
+        .sel(RC),
+        .out(PC_D)
+    );
+
+endmodule
+
 
 module MUX_DF_PA()
 endmodule
