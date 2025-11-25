@@ -775,11 +775,16 @@ module Registro_MEM_WB(
 endmodule
 
 
-// ====
-//  Write Back (WB)
-// ====
+module Pipeline (
+    input        clk,
+    input        reset,
+    input        LE
+);
+    // todas las conexiones internas y m√≥dulos se definen aquui
+    // aqui es donde hago las instanciass?
+endmodule
 
-
+module
 
 module TEST_BENCH3;
 
