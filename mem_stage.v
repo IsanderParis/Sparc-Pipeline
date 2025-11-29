@@ -1,8 +1,21 @@
 
-module MUX_MEM_OUT()
+module MUX_MEM_OUT(
+    input [31:0] ALU_OUT,
+    input [31:0] MEM_OUT,
+    input MEM_LOAD,
+    output reg [31:0] MUX_OUT
+);
+    always @(*) begin
+        if (MEM_LOAD) begin
+            MUX_OUT = MEM_OUT;
+        end else begin
+            MUX_OUT = ALU_OUT;
+        end
+    end
+
 endmodule
 
-module Data_Memory (
+module Data_Memory ( //le puedo quitar el clk
   input         clk,
   input  [8:0]  A_in,     // usamos los 9 bits (0..511)
   input  [31:0] DI,       // dato de entrada
@@ -57,16 +70,3 @@ module Data_Memory (
 endmodule
 
 
-module Registro_MEM_WB(
-    input  clk,
-    input  R,             // Reset
-    input  rf_le_mem,
-    output reg rf_le_wb
-);
-    always @(posedge clk or posedge R) begin
-        if (R)
-            rf_le_wb <= 0;
-        else
-            rf_le_wb <= rf_le_mem;
-    end
-endmodule

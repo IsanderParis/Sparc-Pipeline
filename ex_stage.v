@@ -1,18 +1,216 @@
+module Control_Handler(
+    input ID_JUMPL,
+    input ID_BRANCH,
+    input ID_CALL,
+    input a,
+    input [3:0] ID_COND,
 
-module Control_Handler()
+    // Condition codes seleccionados por el MUX PSR/ALU
+    input MUX_N, MUX_Z, MUX_V, MUX_C,
+
+    output reg [1:0] PC_SEL,
+    output reg       clr_IF
+);
+
+always @(*) begin
+    // Default
+    PC_SEL = 2'b00;  // NPC
+    clr_IF = 1'b0;
+
+    // ===========================
+    // JMPL
+    // ===========================
+    if (ID_JUMPL) begin
+        PC_SEL = 2'b10;   // ALU_OUT
+        clr_IF = 1'b1;
+    end
+
+    // ===========================
+    // CALL
+    // ===========================
+    else if (ID_CALL) begin
+        PC_SEL = 2'b01;   // TA
+        clr_IF = 1'b1;
+    end
+
+    // ===========================
+    // BRANCH
+    // ===========================
+    else if (ID_BRANCH) begin
+        // Evaluación SPARC real:
+        // N, Z, V, C
+        case (ID_COND)
+            4'b0000: begin end                      // BN → nunca brincar
+            4'b0001: if (MUX_Z) begin PC_SEL=2'b01; clr_IF=1; end     // BE
+            4'b0010: if (MUX_Z || (MUX_N ^ MUX_V)) begin PC_SEL=2'b01; clr_IF=1; end  // BLE
+            4'b0011: if (MUX_N ^ MUX_V) begin PC_SEL=2'b01; clr_IF=1; end // BL
+            4'b0100: if (MUX_C || MUX_Z) begin PC_SEL=2'b01; clr_IF=1; end // BLEU
+            4'b0101: if (MUX_C) begin PC_SEL=2'b01; clr_IF=1; end          // BCS
+            4'b0110: if (MUX_N) begin PC_SEL=2'b01; clr_IF=1; end          // BNEG
+            4'b0111: if (MUX_V) begin PC_SEL=2'b01; clr_IF=1; end          // BVS
+            4'b1000: begin PC_SEL=2'b01; clr_IF=1; end                     // BA (always)
+            4'b1001: if (!MUX_Z) begin PC_SEL=2'b01; clr_IF=1; end         // BNE
+            4'b1010: if (!MUX_Z && !(MUX_N ^ MUX_V)) begin PC_SEL=2'b01; clr_IF=1; end // BG
+            4'b1011: if (!(MUX_N ^ MUX_V)) begin PC_SEL=2'b01; clr_IF=1; end // BGE
+            4'b1100: if (!MUX_Z && !MUX_C) begin PC_SEL=2'b01; clr_IF=1; end // BGU
+            4'b1101: if (!MUX_C) begin PC_SEL=2'b01; clr_IF=1; end          // BCC
+            4'b1110: if (!MUX_N) begin PC_SEL=2'b01; clr_IF=1; end          // BPOS
+            4'b1111: if (!MUX_V) begin PC_SEL=2'b01; clr_IF=1; end          // BVC
+        endcase
+    end
+
+end
+
 endmodule
 
-module MUX_ICC()
+
+// module MUX_ICC(
+//     input ALU_Z, ALU_N, ALU_V, ALU_C,
+//     input PSR_Z, PSR_N, PSR_V, PSR_C,
+//     input ID_WE_PSR, 
+//     output reg MUX_Z, MUX_N, MUX_V, MUX_C
+// );
+//     always @(*) begin
+//         if (ID_WE_PSR) begin
+//             MUX_Z = PSR_Z;
+//             MUX_N = PSR_N;
+//             MUX_V = PSR_V;
+//             MUX_C = PSR_C;
+//         end else begin
+//             MUX_Z = ALU_Z;
+//             MUX_N = ALU_N;
+//             MUX_V = ALU_V;
+//             MUX_C = ALU_C;
+//         end
+//     end
+// endmodule
+
+module MUX_EX_ICC(
+    input ALU_Z, ALU_N, ALU_V, ALU_C,
+    input PSR_Z, PSR_N, PSR_V, PSR_C,
+    input EX_WE_PSR,
+    output reg CH_Z, CH_N, CH_V, CH_C
+);
+    always @(*) begin
+        if (EX_WE_PSR) begin
+            CH_Z = PSR_Z;
+            CH_N = PSR_N;
+            CH_V = PSR_V;
+            CH_C = PSR_C;
+        end else begin
+            CH_Z = ALU_Z;
+            CH_N = ALU_N;
+            CH_V = ALU_V;
+            CH_C = ALU_C;
+        end
+    end
 endmodule
 
-module Program_Status_Register()
+module Program_Status_Register(
+    input WE_PSR, clk,
+    input ALU_Z, ALU_N, ALU_V, ALU_C,
+    output reg PSR_Z, PSR_N, PSR_V, PSR_C   
+);
+    always @(posedge clk) begin
+        if (WE_PSR) begin
+            PSR_Z = ALU_Z;
+            PSR_N = ALU_N;
+            PSR_V = ALU_V;
+            PSR_C = ALU_C;
+        end
+    end
 endmodule
 
-module MUX_ALU_CALL()
+module MUX_ALU_CALL(
+    input [31:0] ALU_OUT,
+    input [31:0] PC_D,
+    input EX_CALL,
+    output reg [31:0] MUX_OUT
+);
+    always @(*) begin
+        if (EX_CALL) begin
+            MUX_OUT = PC_D;
+        end else begin
+            MUX_OUT = ALU_OUT;
+        end
+    end
 endmodule
 
-module Data_Hazard_Detection_Unit()
+module Data_Hazard_Detection_Unit(
+    input  [4:0] RA, RB, RC,
+    input  [4:0] EX_RD, MEM_RD, WB_RD,
+    input        EX_RF_LE, MEM_RF_LE, WB_RF_LE,
+    input        EX_LOAD,
+
+    output reg   LE_IF,
+    output reg   NOP_STALL,
+    output reg [1:0] SEL_A,
+    output reg [1:0] SEL_B,
+    output reg [1:0] SEL_C
+);
+
+// ==========================
+// FORWARDING FOR RA
+// ==========================
+always @(*) begin
+    // Default
+    SEL_A = 2'b00;
+
+    if (EX_RF_LE && (EX_RD == RA) && (EX_RD != 0))
+        SEL_A = 2'b01;  // EX forwarding
+    else if (MEM_RF_LE && (MEM_RD == RA) && (MEM_RD != 0))
+        SEL_A = 2'b10;  // MEM forwarding
+    else if (WB_RF_LE && (WB_RD == RA) && (WB_RD != 0))
+        SEL_A = 2'b11;  // WB forwarding
+end
+
+// ==========================
+// FORWARDING FOR RB
+// ==========================
+always @(*) begin
+    SEL_B = 2'b00;
+
+    if (EX_RF_LE && (EX_RD == RB) && (EX_RD != 0))
+        SEL_B = 2'b01;
+    else if (MEM_RF_LE && (MEM_RD == RB) && (MEM_RD != 0))
+        SEL_B = 2'b10;
+    else if (WB_RF_LE && (WB_RD == RB) && (WB_RD != 0))
+        SEL_B = 2'b11;
+end
+
+// ==========================
+// FORWARDING FOR RC
+// ==========================
+always @(*) begin
+    SEL_C = 2'b00;
+
+    if (EX_RF_LE && (EX_RD == RC) && (EX_RD != 0))
+        SEL_C = 2'b01;
+    else if (MEM_RF_LE && (MEM_RD == RC) && (MEM_RD != 0))
+        SEL_C = 2'b10;
+    else if (WB_RF_LE && (WB_RD == RC) && (WB_RD != 0))
+        SEL_C = 2'b11;
+end
+
+// ==========================
+// LOAD-USE HAZARD STALL
+// ==========================
+always @(*) begin
+    if (EX_LOAD &&
+        ((EX_RD == RA) || (EX_RD == RB) || (EX_RD == RC)) &&
+        (EX_RD != 0))
+    begin
+        LE_IF     = 1'b0;   // stop IF
+        NOP_STALL = 1'b1;   // insert NOP in ID/EX
+    end
+    else begin
+        LE_IF     = 1'b1;
+        NOP_STALL = 1'b0;
+    end
+end
+
 endmodule
+ 
 
 module Arithmetic_Logic_Unit (
     input  [31:0] A, B,
@@ -110,18 +308,25 @@ endmodule
 
 module Registro_EX_MEM(
     input        clk,
-    input        R,             
+    input        R,      
+    input [4:0]  ex_rd,   
     input        load_ex,
     input        rf_le_ex,
     input        E_ex,
     input  [1:0] size_ex,
     input        rw_dm_ex,
+    input[31:0] alu_out_ex,
+    input [31:0] PC_D_ex,
 
+    output reg [31:0] df_a_mem,
     output reg        load_mem,
     output reg        rf_le_mem,
+    output reg [4:0]  mem_rd,
     output reg        E_mem,
     output reg [1:0]  size_mem,
-    output reg        rw_dm_mem
+    output reg        rw_dm_mem,
+    output reg [31:0] alu_out_mem,
+    output reg [31:0] PC_D_mem
 );
     always @(posedge clk) begin
         if (R) begin

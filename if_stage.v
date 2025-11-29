@@ -2,20 +2,38 @@
 
 module MUX_IF(
     input  [31:0] npc_in,       // Valor actual del nPC
+    input  [31:0] alu_out,      // Salida ALU
+    input  [31:0] ta,           // Target Address (instrucción de
     input   [1:0] sel,          // Seleccion de la fuente
-    output [31:0] mux_out       // Salida = npc_in + 4
+    output reg [31:0] mux_out       // Salida = npc_in + 4
 );
-    assign mux_out = npc_in + 4;
+    // assign mux_out = npc_in + 4;
     //implementar condicion con sel (alu_out, TA, nPC)
+    always @(*) begin
+        case (sel)
+            2'b00: mux_out = npc_in;
+            2'b01: mux_out = alu_out;
+            2'b10: mux_out = ta;
+            default: mux_out = 32'b0;
+        endcase
+    end
+
 endmodule
 
+module Adder(
+    input [31:0] mux_out,
+    output [31:0] adder_out
+);
+
+assign adder_out = mux_out + 4;
+endmodule
 // =========================
 
 module NPC_IF(
     input        clk,           // reloj
     input        LE,            // Load Enable
     input        R,             // Reset
-    input  [31:0] mux_out,      // entrada desde MUX_IF
+    input  [31:0] adder_out,      // entrada desde MUX_IF
     output reg [31:0] npc       // salida = siguiente PC
 );
     always @(posedge clk) begin
@@ -55,35 +73,40 @@ module Instruction_Memory(
 endmodule
 
 // este es el que se uso en fase 1
-module instruction_memory (
-  input  [8:0]  A,     // 0..511
-  output [31:0] I
-);
-  reg [7:0] imem [0:511];
-  integer k;
+// module Instruction_Memory (
+//   input  [8:0]  A,     // 0..511
+//   output [31:0] I
+// );
+//   reg [7:0] imem [0:511];
+//   integer k;
 
-  initial begin
-    // Limpia toda la ROM a 0
-    for (k = 0; k < 512; k = k + 1) imem[k] = 8'h00;
-    // Carga solo los primeros 16 bytes para evitar warnings
-    $readmemb("precharge_code.txt", imem, 0, 15);
-  end
+//   initial begin
+//     // Limpia toda la ROM a 0
+//     for (k = 0; k < 512; k = k + 1) imem[k] = 8'h00;
+//     // Carga solo los primeros 16 bytes para evitar warnings
+//     $readmemb("precharge_code.txt", imem, 0, 15);
+//   end
 
   // Lectura big-endian (A = byte más significativo del word)
-  assign I = { imem[A], imem[A+1], imem[A+2], imem[A+3] };
-endmodule
+//   assign I = { imem[A], imem[A+1], imem[A+2], imem[A+3] };
+// endmodule
 // =========================
 
 module Registro_IF_ID(
     input        clk,                 // reloj
     input        R,                   // reset
-    input  [31:0] instruction,        // entrada desde Instruction Memory
-    output reg [31:0] instruction_out // salida hacia la etapa ID
+    input        LE,
+    input CH_clear,
+    input  [31:0] pc_in,              // entrada desde PC_IF
+    input  [31:0] instruction_in,        // entrada desde Instruction Memory
+    output reg [31:0] instruction_out, // salida hacia la etapa ID
+    output reg [31:0] pc_out         // salida hacia la etapa ID
 );
     always @(posedge clk) begin
-        if (R)
+        if (R || CH_clear)
             instruction_out <= 32'b0;   // limpia en reset
-        else
-            instruction_out <= instruction; // guarda la nueva instrucci√≥n
+        else if (LE)
+            instruction_out <= instruction_in; // guarda la nueva instrucción
+            pc_out <= pc_in;
     end
 endmodule
