@@ -40,7 +40,7 @@ module NPC_IF(
         if (R)
             npc <= 4;
         else if (LE)
-            npc <= mux_out;
+            npc <= adder_out;
     end
 endmodule
 

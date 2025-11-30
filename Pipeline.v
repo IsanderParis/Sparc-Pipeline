@@ -80,6 +80,7 @@ wire [4:0] ID_RS2_WIRE;
 wire [29:0] ID_OFFSET_WIRE;
 wire [3:0]  ID_COND_WIRE;
 wire [12:0] ID_SIMM13_WIRE;
+wire [21:0] ID_imm22;
 
 assign ID_RD_WIRE = ID_INSTRUCTION_WIRE[29:25];
 assign ID_RS1_WIRE = ID_INSTRUCTION_WIRE[18:14];
@@ -87,6 +88,7 @@ assign ID_RS2_WIRE = ID_INSTRUCTION_WIRE[4:0];
 assign ID_OFFSET_WIRE = ID_INSTRUCTION_WIRE[29:0];
 assign ID_COND_WIRE = ID_INSTRUCTION_WIRE[28:25];
 assign ID_SIMM13_WIRE = ID_INSTRUCTION_WIRE[12:0];
+assign ID_imm22 = {{9{ID_SIMM13_WIRE[12]}}, ID_SIMM13_WIRE};
 
 //================================
 //EX stage
@@ -99,7 +101,8 @@ wire [31:0] EX_SOH_N_WIRE;
 wire [31:0] EX_SOH_OUT_WIRE; 
 wire [31:0] EX_ALU_OUT_WIRE; 
 wire [31:0] EX_PC_D_WIRE;
-wire [12:0] EX_SIMM13_WIRE;
+wire [21:0] EX_IMM22_WIRE;
+
 wire [3:0] EX_ALU_OP_WIRE, EX_SOH_IS_WIRE;
 wire [4:0] EX_RD_WIRE;
 
@@ -149,7 +152,11 @@ wire MEM_LOAD_WIRE;
 wire MEM_RF_LE_WIRE;
 wire [4:0] MEM_RD_WIRE;
 wire [31:0] MEM_ALU_OUT_WIRE, MEM_DM_OUT_WIRE, MEM_MUX_OUT_WIRE; 
+wire [8:0] DM_A;
 
+assign DM_A = MEM_ALU_OUT_WIRE[8:0]; // direccion de memoria
+
+// assign DM_A = MEM_MUX_OUT_WIRE[8:0];
 //=========================
 //wb stage
 //=========================
@@ -337,8 +344,8 @@ Registro_ID_EX REG_ID_EX_0 (
     .EX_PC_SEL_in(EX_CH_PC_SEL),
 
     //simm13
-    .imm13_in(ID_SIMM13_WIRE),
-    .imm13_out(EX_SIMM13_WIRE),
+    .imm22_in(ID_imm22),
+    .imm22_out(EX_IMM22_WIRE),
 
     //out
     .EX_ALU_OP_out(EX_ALU_OP_WIRE),
@@ -455,7 +462,7 @@ Arithmetic_Logic_Unit ALU_0(
 Second_Operand_Handler SOH_0(
     
     .R(EX_SOH_R_WIRE),
-    .Imm(EX_SIMM13_WIRE),
+    .Imm(EX_IMM22_WIRE),
     .IS(EX_SOH_IS_WIRE),
     .N(EX_SOH_N_WIRE)
 );
@@ -478,9 +485,9 @@ Registro_EX_MEM REG_EX_MEM_0(
     .load_ex(EX_LOAD_WIRE),
     .rf_le_ex(EX_RF_LE_WIRE),
     .E_ex(EX_E_WIRE),
-    .Size_ex(EX_MEM_SIZE_WIRE),
+    .size_ex(EX_MEM_SIZE_WIRE),
     .rw_dm_ex(EX_RW_DM_WIRE),
-    .alu_out_ex(),
+    .alu_out_ex(EX_MUX_ALU_CALL),
     .ex_rd(EX_RD_WIRE),
     .PC_D_ex(DF_C_OUT_WIRE),
 
@@ -499,7 +506,7 @@ Registro_EX_MEM REG_EX_MEM_0(
  Data_Memory DM_0(
     //in
     .clk(CLOCK),//quitar
-    .A_in(MEM_ALU_OUT_WIRE),
+    .A_in(DM_A),
     .DI(MEM_DI_WIRE),
     .Size(MEM_SIZE_WIRE),
     .RW(MEM_RW_WIRE),
