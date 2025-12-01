@@ -1,10 +1,7 @@
 `timescale 1ns/1ps
-
-
 module Pipeline (
     input CLOCK,
     input RESET       // Reset
-
 );
 //=========================
 // IF
@@ -140,6 +137,7 @@ wire [1:0] EX_MEM_SIZE_WIRE;
 
 //dhdu
 wire NOP_STALL_WIRE, DHDU_LE_WIRE;
+assign DHDU_LE_WIRE = 1'b1; // deshabilitado para pruebas
 
 //=========================
 // MEM stage
@@ -438,6 +436,7 @@ Data_Hazard_Detection_Unit DHDU_0(
 
     //out
     .LE_IF(DHDU_LE_WIRE),
+    // .LE_IF(1'b1), // deshabilitado para pruebas
     .NOP_STALL(NOP_STALL_WIRE),
     .SEL_A(DF_Sel_A_WIRE),
     .SEL_B(DF_Sel_B_WIRE),
@@ -542,6 +541,264 @@ Registro_MEM_WB REG_MEM_WB_0(
 
 endmodule
 
-module TEST_BENCH4();
+
+// module TB4();
+
+//     reg CLOCK;
+//     reg RESET;
+
+//     // Instancia del Pipeline
+//     Pipeline UUT (
+//         .CLOCK(CLOCK),
+//         .RESET(RESET)
+//     );
+
+//     // ================================
+//     // 1. Clock
+//     // ================================
+//     initial begin
+//         CLOCK = 0;
+//         forever #2 CLOCK = ~CLOCK;   // toggle cada 2 time units
+//     end
+
+//     // ================================
+//     // 2. Reset
+//     // ================================
+//     initial begin
+//         RESET = 1;
+//         #3 RESET = 0;
+//     end
+
+//     // ================================
+//     // 3. Carga de Instruction Memory
+//     // ================================
+//     initial begin
+//         // LIMPIAR mem
+//         integer k;
+//         for (k = 0; k < 512; k = k + 1)
+//             UUT.INSTRUCTION_MEMORY_0.imem[k] = 8'h00;
+
+//         // CARGAR DESDE ARCHIVO
+//         readmemb("../test/debugging_code_SPARC.txt",
+//                  UUT.INSTRUCTION_MEMORY_0.imem);
+//     end
+
+//     // ================================
+//     // 4. Carga de Data Memory
+//     // ================================
+//     initial begin
+//         integer k;
+//         for (k = 0; k < 512; k = k + 1)
+//             UUT.DM_0.dmem[k] = 8'h00;
+
+//         readmemb("../test/debugging_code_SPARC.txt",
+//                  UUT.DM_0.dmem);
+//     end
+
+//     // ================================
+//     // 5. Monitor según Fase IV
+//     // ================================
+//     initial begin
+//         display(" time |   PC  |  r5  |  r6  |  r16 |  r17 |  r18 ");
+//         monitor("%4t | %4d | %4d | %4d | %4d | %4d | %4d",
+//                  time,
+//                  UUT.IF_PC_WIRE,
+//                  UUT.RF_ID_0.regs[5],
+//                  UUT.RF_ID_0.regs[6],
+//                  UUT.RF_ID_0.regs[16],
+//                  UUT.RF_ID_0.regs[17],
+//                  UUT.RF_ID_0.regs[18]
+//         );
+//     end
+
+//     // ================================
+//     // 6. A tiempo 76 imprimir word@56
+//     // ================================
+//     initial begin
+//         #76
+//         display("\nWord en memory[56] = %b%b%b%b",
+//             UUT.DM_0.dmem[56],
+//             UUT.DM_0.dmem[57],
+//             UUT.DM_0.dmem[58],
+//             UUT.DM_0.dmem[59]
+//         );
+//     end
+
+//     // ================================
+//     // 7. Finalizar simulación
+//     // ================================
+//     initial begin
+//         #80 finish;
+//     end
+
+// endmodule
+// module TB_PIPELINE_IM;
+
+//     reg CLOCK;
+//     reg RESET;
+
+//     // Instanciar el Pipeline COMPLETO
+//     Pipeline pipeline (
+//         .CLOCK(CLOCK),
+//         .RESET(RESET)
+//     );
+
+//     // =============================
+//     // 1. Clock
+//     // =============================
+//     initial begin
+//         CLOCK = 0;
+//         forever #5 CLOCK = ~CLOCK; // 10 ns period
+//     end
+
+//     // =============================
+//     // 2. Reset
+//     // =============================
+//     initial begin
+//         RESET = 1;
+//         #12 RESET = 0;
+//     end
+
+//     // =============================
+//     // 3. Cargar Instruction Memory
+//     // =============================
+//     reg [31:0] test_instruction[0:511];
+//     initial begin
+//     $readmemb("./test/debugging_code_SPARC.txt", test_instruction);
+
+//     $display("\n=== Cargando instrucciones en Instruction Memory ===");
+
+//     for (integer k = 0; k < 512; k = k + 1) begin
+//         pipeline.INSTRUCTION_MEMORY_0.imem[k] = test_instruction[k];
+//         $display("PC = %0d", pipeline.PC_IF_0.pc_out);
+//         // Display de cada instrucción cargada
+//         if (test_instruction[k] !== 32'bx)
+//             $display("IM[%0d] = %b", k, test_instruction[k]);
+//         end
+//     end
+        
+
+    //     // CARGAR DESDE ARCHIVO
+    //     $display("\n=== Cargando instrucciones en Instruction Memory ===");
+    //     $readmemb("../test/debugging_code_SPARC.txt",
+    //               UUT.INSTRUCTION_MEMORY_0.imem);
+
+
+    // // =============================
+    // // 4. MONITOR únicamente IF stage
+    // // =============================
+    // initial begin
+    //     $display("\ntime | PC  | INSTRUCTION");
+    //     $monitor("%4t | %3d | %b",
+    //         $time,
+    //         UUT.IF_PC_WIRE,
+    //         UUT.IF_INSTRUCTION_WIRE
+    //     );
+    // end
+
+    // // =============================
+    // // 5. Imprimir primeras 8 instrucciones
+    // // =============================
+    // initial begin
+    //     #20;
+    //     integer i;
+    //     $display("\n=== Verificación manual de las primeras 8 instrucciones ===");
+    //     for (i = 0; i < 8; i = i + 1) begin
+    //         $display("Word %0d = %b%b%b%b",
+    //             i,
+    //             UUT.INSTRUCTION_MEMORY_0.imem[i*4],
+    //             UUT.INSTRUCTION_MEMORY_0.imem[i*4+1],
+    //             UUT.INSTRUCTION_MEMORY_0.imem[i*4+2],
+    //             UUT.INSTRUCTION_MEMORY_0.imem[i*4+3]
+    //         );
+    //     end
+    // end
+
+    // // =============================
+    // // 6. Fin
+    // // =============================
+//     initial begin
+//         #150 $finish;
+//     end
+
+// endmodule
+module TB4();
+
+    reg CLOCK;
+    reg RESET;
+
+    // Instancia del pipeline
+    Pipeline pipeline (
+        .CLOCK(CLOCK),
+        .RESET(RESET)
+    );
+
+    // ================================
+    // 1. Cargar Instruction Memory
+    // ================================
+    reg [31:0] instr_words [0:511];
+    initial begin
+        $display("\n=== Cargando debugging_code_SPARC.txt ===");
+
+        // Carga 32-bit words desde archivo
+        $readmemb("test/debugging_code_SPARC.txt", instr_words);
+
+        // Copia directamente a la memoria word-aligned del pipeline
+        for (integer i = 0; i < 14; i = i + 1) begin
+            pipeline.INSTRUCTION_MEMORY_0.Mem[i] = instr_words[i];
+
+            if (instr_words[i] !== 32'bx) begin
+                $display("IM[%0d] = %b", i, instr_words[i]);
+            end
+        end
+        $display("=== Instruction Memory cargada ===\n");
+    end
+
+    // ================================
+    // 2. Clock
+    // ================================
+    initial begin
+        CLOCK = 0;
+        forever #2 CLOCK = ~CLOCK; // periodo = 4ns
+    end
+
+    // ================================
+    // 3. Reset
+    // ================================
+    initial begin
+        RESET = 1;
+        #5 RESET = 0;
+    end
+
+    // ================================
+    // 4. Print estilo TB3 — por etapa
+    // ================================
+    // always @(posedge CLOCK) begin
+    //     if (!RESET) begin
+    //         $display("\n[%0t]", $time);
+    //         $display("IF : PC=%0d | Instr=%b",
+    //             pipeline.IF_PC_WIRE,
+    //             pipeline.IF_INSTRUCTION_WIRE
+    //         ); 
+    //     end
+    // end
+
+    always @(posedge CLOCK) begin
+    if (!RESET) begin
+        $display("IM[%0d] = %b | IF_INSTRUCTION=%b",
+            pipeline.IF_PC_WIRE,
+            pipeline.INSTRUCTION_MEMORY_0.Mem[pipeline.IF_PC_WIRE >> 2],
+            pipeline.IF_INSTRUCTION_WIRE
+        );
+         end
+    end
+
+
+    // ================================
+    // 5. Stop
+    // ================================
+    initial begin
+        #52 $finish;
+    end
 
 endmodule

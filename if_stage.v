@@ -67,9 +67,14 @@ module Instruction_Memory(
   input  [31:0] pc_out,
   output [31:0] instruction
 );
-  reg [31:0] Mem [0:127];   // 128 instrucciones
+  reg [31:0] Mem [0:511];   // 128 instrucciones
+  integer i;
+  initial begin
+    for (i = 0; i < 511; i = i + 1)
+      Mem[i] = 32'b0;       // NOP por defecto
+  end
 
-  assign instruction = Mem[pc_out >> 2]; 
+  assign instruction = Mem[pc_out >> 2];
 endmodule
 
 // este es el que se uso en fase 1
