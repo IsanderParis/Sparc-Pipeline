@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+
 module Pipeline (
     input CLOCK,
     input RESET       // Reset
@@ -82,10 +83,28 @@ wire [21:0] ID_imm22;
 assign ID_RD_WIRE = ID_INSTRUCTION_WIRE[29:25];
 assign ID_RS1_WIRE = ID_INSTRUCTION_WIRE[18:14];
 assign ID_RS2_WIRE = ID_INSTRUCTION_WIRE[4:0];
-assign ID_OFFSET_WIRE = ID_INSTRUCTION_WIRE[29:0];
+// assign ID_OFFSET_WIRE = ID_INSTRUCTION_WIRE[29:0];
 assign ID_COND_WIRE = ID_INSTRUCTION_WIRE[28:25];
 assign ID_SIMM13_WIRE = ID_INSTRUCTION_WIRE[12:0];
 assign ID_imm22 = {{9{ID_SIMM13_WIRE[12]}}, ID_SIMM13_WIRE};
+assign CU_a = ID_INSTRUCTION_WIRE[29];
+
+// Crudo de instrucción
+wire [29:0] disp30_raw = ID_INSTRUCTION_WIRE[29:0];
+wire [21:0] disp22_raw = ID_INSTRUCTION_WIRE[21:0];
+
+// Sign-extend
+wire signed [31:0] disp30_sext = {{2{disp30_raw[29]}}, disp30_raw};
+wire signed [31:0] disp22_sext = {{10{disp22_raw[21]}}, disp22_raw};
+
+// offset en bytes (<<<2)
+wire signed [31:0] offset32 =
+    CU_CALL_WIRE   ? (disp30_sext <<< 2) :
+    CU_BRANCH_WIRE ? (disp22_sext <<< 2) :
+                     32'd0;
+
+// Enviar 32 bits completos
+assign ID_OFFSET_WIRE = offset32;
 
 //================================
 //EX stage
@@ -137,7 +156,7 @@ wire [1:0] EX_MEM_SIZE_WIRE;
 
 //dhdu
 wire NOP_STALL_WIRE, DHDU_LE_WIRE;
-assign DHDU_LE_WIRE = 1'b1; // deshabilitado para pruebas
+// assign DHDU_LE_WIRE = 1'b1; // deshabilitado para pruebas
 
 //=========================
 // MEM stage
@@ -169,32 +188,35 @@ wire WB_RF_LE_WIRE;
 //Instanciasde modulos
 //==========================
 
+wire [31:0] NPC_WIRE = IF_PC_WIRE + 4;
 // IF Stage
 MUX_IF MUX_IF_0 (
-    .npc_in(IF_NPC_WIRE),
+    .npc_in(NPC_WIRE),
     .alu_out(EX_MUX_ALU_CALL),          
     .ta(ID_TAG_WIRE),               
-    .sel(PC_SEL_WIRE),              
+    .sel(EX_CH_PC_SEL),              
     .mux_out(IF_MUX_WIRE)          
-);
-Adder ADDER_0 (
-    .mux_out(IF_MUX_WIRE),         
-    .adder_out(IF_ADDER_WIRE)
-);
-NPC_IF NPC_IF_0 (
-    .clk(CLOCK),
-    .R(RESET),
-    .LE(DHDU_LE_WIRE),              
-    .adder_out(IF_ADDER_WIRE),        
-    .npc(IF_NPC_WIRE)
 );
 PC_IF PC_IF_0 (
     .clk(CLOCK),
     .R(RESET),
-    .LE(DHDU_LE_WIRE),              
-    .nPC(IF_MUX_WIRE),
+    .LE(DHDU_LE_WIRE),   
+    //in           
+    .mux_out(IF_MUX_WIRE),
+    //out
     .pc_out(IF_PC_WIRE)
 );
+// Adder ADDER_0 (
+//     .mux_out(IF_PC_WIRE),         
+//     .adder_out(IF_ADDER_WIRE)
+// );
+// NPC_IF NPC_IF_0 (
+//     .clk(CLOCK),
+//     .R(RESET),
+//     .LE(DHDU_LE_WIRE),              
+//     .adder_out(IF_ADDER_WIRE),        
+//     .npc(IF_NPC_WIRE)
+// );
 Instruction_Memory INSTRUCTION_MEMORY_0 ( // cambiarlo al otro im
     .pc_out(IF_PC_WIRE),
     .instruction(IF_INSTRUCTION_WIRE)
@@ -206,7 +228,8 @@ Registro_IF_ID REG_IF_ID_0 (
     .pc_in(IF_PC_WIRE),
     .instruction_in(IF_INSTRUCTION_WIRE),
     .pc_out(ID_PC_WIRE),
-    .instruction_out(ID_INSTRUCTION_WIRE)
+    .instruction_out(ID_INSTRUCTION_WIRE),
+    .CH_clear(clr_IF_WIRE)
 );
 //ID Stage
 
@@ -235,6 +258,12 @@ Register_File RF_ID_0 (
     .PC_D(DF_PC_D_WIRE)
 );
 
+MUX_CALL ID_MUX_CALL0(
+    .rd(ID_RD_WIRE),
+    .isCALL(STALL_CALL_WIRE),
+    .MUX_RD_OUT(ID_MUX_RD_WIRE)
+
+);
 
 CU_ID CU_ID_0 (
     //in
@@ -245,7 +274,7 @@ CU_ID CU_ID_0 (
     .ID_SOH_OP_out(CU_SOH_OP_WIRE),
     .ID_LOAD_out(CU_LOAD_WIRE),
     .ID_BRANCH_out(CU_BRANCH_WIRE),
-    .ID_JUMPL_out(CU_JUMP_WIRE),
+    .ID_JUMPL_out(CU_JUMPL_WIRE),
     .ID_RF_LE_out(CU_RF_LE_WIRE),
     .ID_CALL_out(CU_CALL_WIRE),
     .ID_a_out(CU_a),
@@ -258,27 +287,27 @@ CU_ID CU_ID_0 (
 MUX_DF_PA MUX_DF_A(
     .DF_Sel_A(DF_Sel_A_WIRE),
     .DF_PA(DF_PA_WIRE),
-    .DF_A_ALU(DF_A_ALU_WIRE),
-    .DF_A_MEM(DF_A_MEM_WIRE),
-    .DF_A_WB(DF_A_WB_WIRE),
+    .DF_A_ALU(EX_MUX_ALU_CALL),
+    .DF_A_MEM(MEM_MUX_OUT_WIRE),
+    .DF_A_WB(WB_MUX_OUT_WIRE),
     .MUX_A_OUT(DF_A_OUT_WIRE)
 );
 
 MUX_DF_PB MUX_DF_B(
     .DF_Sel_B(DF_Sel_B_WIRE),
     .DF_PB(DF_PB_WIRE),
-    .DF_B_ALU(DF_B_ALU_WIRE),
-    .DF_B_MEM(DF_B_MEM_WIRE),
-    .DF_B_WB(DF_B_WB_WIRE),
+    .DF_B_ALU(EX_MUX_ALU_CALL),
+    .DF_B_MEM(MEM_MUX_OUT_WIRE),
+    .DF_B_WB(WB_MUX_OUT_WIRE),
     .MUX_B_OUT(DF_B_OUT_WIRE)
 );
 
 MUX_DF_PC_D MUX_DF_C(
     .DF_Sel_C(DF_Sel_C_WIRE),
     .DF_PC_D(DF_PC_D_WIRE),
-    .DF_C_ALU(DF_C_ALU_WIRE),
-    .DF_C_MEM(DF_C_MEM_WIRE),
-    .DF_C_WB(DF_C_WB_WIRE),
+    .DF_C_ALU(EX_MUX_ALU_CALL),
+    .DF_C_MEM(MEM_MUX_OUT_WIRE),
+    .DF_C_WB(WB_MUX_OUT_WIRE),
     .MUX_C_OUT(DF_C_OUT_WIRE)
 );
 
@@ -297,6 +326,7 @@ MUX_ID_STALL MUX_ID_STALL_0 (
     .ID_MUX_E_in(CU_E_WIRE),
     .ID_MUX_RW_DM_in(CU_RW_WIRE),
     .ID_MUX_SIZE_in(CU_MEM_SIZE_WIRE),
+    .ID_MUX_a_in(CU_a),
     
     //out 
     .ID_MUX_ALU_OP_out(STALL_ALU_OP_WIRE),
@@ -408,6 +438,8 @@ MUX_EX_ICC MUX_EX_ICC_0(
     .ALU_V(EX_ALU_V_WIRE),
     .ALU_C(EX_ALU_C_WIRE),
 
+    .EX_WE_PSR(EX_WE_PSR_WIRE),
+
     .PSR_Z(EX_PSR_Z_WIRE),
     .PSR_N(EX_PSR_N_WIRE),
     .PSR_V(EX_PSR_V_WIRE),
@@ -449,13 +481,13 @@ Arithmetic_Logic_Unit ALU_0(
     .A(EX_ALU_A_WIRE),
     .B(EX_SOH_N_WIRE),
     .OP(EX_ALU_OP_WIRE),
-    .Ci(EX_CH_C_WIRE),
+    .Ci(EX_ALU_C_WIRE),
     //out
     .Out(EX_ALU_OUT_WIRE),
-    .Z(ALU_Z_WIRE),
-    .N(ALU_N_WIRE),
-    .V(ALU_V_WIRE),
-    .C(ALU_C_WIRE)
+    .Z(EX_ALU_Z_WIRE),
+    .N(EX_ALU_N_WIRE),
+    .V(EX_ALU_V_WIRE),
+    .C(EX_ALU_C_WIRE)
 );
 
 Second_Operand_Handler SOH_0(
@@ -487,6 +519,7 @@ Registro_EX_MEM REG_EX_MEM_0(
     .size_ex(EX_MEM_SIZE_WIRE),
     .rw_dm_ex(EX_RW_DM_WIRE),
     .alu_out_ex(EX_MUX_ALU_CALL),
+
     .ex_rd(EX_RD_WIRE),
     .PC_D_ex(DF_C_OUT_WIRE),
 
@@ -537,191 +570,9 @@ Registro_MEM_WB REG_MEM_WB_0(
     .wb_mux_out(WB_MUX_OUT_WIRE),
     .wb_rd(WB_RD_WIRE)
 );  
-
-
 endmodule
 
 
-// module TB4();
-
-//     reg CLOCK;
-//     reg RESET;
-
-//     // Instancia del Pipeline
-//     Pipeline UUT (
-//         .CLOCK(CLOCK),
-//         .RESET(RESET)
-//     );
-
-//     // ================================
-//     // 1. Clock
-//     // ================================
-//     initial begin
-//         CLOCK = 0;
-//         forever #2 CLOCK = ~CLOCK;   // toggle cada 2 time units
-//     end
-
-//     // ================================
-//     // 2. Reset
-//     // ================================
-//     initial begin
-//         RESET = 1;
-//         #3 RESET = 0;
-//     end
-
-//     // ================================
-//     // 3. Carga de Instruction Memory
-//     // ================================
-//     initial begin
-//         // LIMPIAR mem
-//         integer k;
-//         for (k = 0; k < 512; k = k + 1)
-//             UUT.INSTRUCTION_MEMORY_0.imem[k] = 8'h00;
-
-//         // CARGAR DESDE ARCHIVO
-//         readmemb("../test/debugging_code_SPARC.txt",
-//                  UUT.INSTRUCTION_MEMORY_0.imem);
-//     end
-
-//     // ================================
-//     // 4. Carga de Data Memory
-//     // ================================
-//     initial begin
-//         integer k;
-//         for (k = 0; k < 512; k = k + 1)
-//             UUT.DM_0.dmem[k] = 8'h00;
-
-//         readmemb("../test/debugging_code_SPARC.txt",
-//                  UUT.DM_0.dmem);
-//     end
-
-//     // ================================
-//     // 5. Monitor según Fase IV
-//     // ================================
-//     initial begin
-//         display(" time |   PC  |  r5  |  r6  |  r16 |  r17 |  r18 ");
-//         monitor("%4t | %4d | %4d | %4d | %4d | %4d | %4d",
-//                  time,
-//                  UUT.IF_PC_WIRE,
-//                  UUT.RF_ID_0.regs[5],
-//                  UUT.RF_ID_0.regs[6],
-//                  UUT.RF_ID_0.regs[16],
-//                  UUT.RF_ID_0.regs[17],
-//                  UUT.RF_ID_0.regs[18]
-//         );
-//     end
-
-//     // ================================
-//     // 6. A tiempo 76 imprimir word@56
-//     // ================================
-//     initial begin
-//         #76
-//         display("\nWord en memory[56] = %b%b%b%b",
-//             UUT.DM_0.dmem[56],
-//             UUT.DM_0.dmem[57],
-//             UUT.DM_0.dmem[58],
-//             UUT.DM_0.dmem[59]
-//         );
-//     end
-
-//     // ================================
-//     // 7. Finalizar simulación
-//     // ================================
-//     initial begin
-//         #80 finish;
-//     end
-
-// endmodule
-// module TB_PIPELINE_IM;
-
-//     reg CLOCK;
-//     reg RESET;
-
-//     // Instanciar el Pipeline COMPLETO
-//     Pipeline pipeline (
-//         .CLOCK(CLOCK),
-//         .RESET(RESET)
-//     );
-
-//     // =============================
-//     // 1. Clock
-//     // =============================
-//     initial begin
-//         CLOCK = 0;
-//         forever #5 CLOCK = ~CLOCK; // 10 ns period
-//     end
-
-//     // =============================
-//     // 2. Reset
-//     // =============================
-//     initial begin
-//         RESET = 1;
-//         #12 RESET = 0;
-//     end
-
-//     // =============================
-//     // 3. Cargar Instruction Memory
-//     // =============================
-//     reg [31:0] test_instruction[0:511];
-//     initial begin
-//     $readmemb("./test/debugging_code_SPARC.txt", test_instruction);
-
-//     $display("\n=== Cargando instrucciones en Instruction Memory ===");
-
-//     for (integer k = 0; k < 512; k = k + 1) begin
-//         pipeline.INSTRUCTION_MEMORY_0.imem[k] = test_instruction[k];
-//         $display("PC = %0d", pipeline.PC_IF_0.pc_out);
-//         // Display de cada instrucción cargada
-//         if (test_instruction[k] !== 32'bx)
-//             $display("IM[%0d] = %b", k, test_instruction[k]);
-//         end
-//     end
-        
-
-    //     // CARGAR DESDE ARCHIVO
-    //     $display("\n=== Cargando instrucciones en Instruction Memory ===");
-    //     $readmemb("../test/debugging_code_SPARC.txt",
-    //               UUT.INSTRUCTION_MEMORY_0.imem);
-
-
-    // // =============================
-    // // 4. MONITOR únicamente IF stage
-    // // =============================
-    // initial begin
-    //     $display("\ntime | PC  | INSTRUCTION");
-    //     $monitor("%4t | %3d | %b",
-    //         $time,
-    //         UUT.IF_PC_WIRE,
-    //         UUT.IF_INSTRUCTION_WIRE
-    //     );
-    // end
-
-    // // =============================
-    // // 5. Imprimir primeras 8 instrucciones
-    // // =============================
-    // initial begin
-    //     #20;
-    //     integer i;
-    //     $display("\n=== Verificación manual de las primeras 8 instrucciones ===");
-    //     for (i = 0; i < 8; i = i + 1) begin
-    //         $display("Word %0d = %b%b%b%b",
-    //             i,
-    //             UUT.INSTRUCTION_MEMORY_0.imem[i*4],
-    //             UUT.INSTRUCTION_MEMORY_0.imem[i*4+1],
-    //             UUT.INSTRUCTION_MEMORY_0.imem[i*4+2],
-    //             UUT.INSTRUCTION_MEMORY_0.imem[i*4+3]
-    //         );
-    //     end
-    // end
-
-    // // =============================
-    // // 6. Fin
-    // // =============================
-//     initial begin
-//         #150 $finish;
-//     end
-
-// endmodule
 module TB4();
 
     reg CLOCK;
@@ -733,25 +584,64 @@ module TB4();
         .RESET(RESET)
     );
 
-    // ================================
-    // 1. Cargar Instruction Memory
-    // ================================
+    // Cargar Instrucciones
     reg [31:0] instr_words [0:511];
     initial begin
-        $display("\n=== Cargando debugging_code_SPARC.txt ===");
 
-        // Carga 32-bit words desde archivo
-        $readmemb("test/debugging_code_SPARC.txt", instr_words);
+    // LIMPIAR INSTRUCTION MEMORY
+    $display("Limpiando Instruction Memory...");
+    for (integer i = 0; i < 512; i = i + 1) begin
+        pipeline.INSTRUCTION_MEMORY_0.Mem[i] = 32'b0;
+    end
 
-        // Copia directamente a la memoria word-aligned del pipeline
-        for (integer i = 0; i < 14; i = i + 1) begin
-            pipeline.INSTRUCTION_MEMORY_0.Mem[i] = instr_words[i];
+    // LIMPIAR Y PRECARGAR DATA MEMORY
+    $display("Limpiando Data Memory...");
+    for (integer j = 0; j < 512; j = j + 1) begin
+        pipeline.DM_0.mem[j] = 8'h00;
+    end
 
-            if (instr_words[i] !== 32'bx) begin
-                $display("IM[%0d] = %b", i, instr_words[i]);
-            end
-        end
-        $display("=== Instruction Memory cargada ===\n");
+    // PRELOAD REQUERIDO PARA debugfile
+    pipeline.DM_0.mem[56] = 8'd5;    // primer byte
+    pipeline.DM_0.mem[57] = 8'd20;   // segundo byte
+    pipeline.DM_0.mem[58] = 8'd7;    // tercer byte
+
+  
+
+    // PRINT DM PRECARGADA debugfile
+    // $display("=== Data Memory Pre-Loaded ===");
+    // $display("DM[56] = %0d", pipeline.DM_0.mem[56]);
+    // $display("DM[57] = %0d", pipeline.DM_0.mem[57]);
+    // $display("DM[58] = %0d", pipeline.DM_0.mem[58]);
+    // $display("==============================\n");
+
+
+    // =====================
+    // CARGAR INSTRUCTION MEMORY
+    // =====================
+    $display("=== Cargando debugging_code_SPARC.txt ===");
+    //leer debugging code
+    // $readmemb("test/debugging_code_SPARC.txt", instr_words);
+
+    //leer testcode1
+    $readmemb("test/testcode_sparc1.txt", instr_words);
+
+    //leer testcode2 (56)
+    // $readmemb("test/testcode_sparc2.txt", instr_words);
+
+    //leer testcode2
+
+    for (integer i = 0; i < 14; i = i + 1) begin
+        pipeline.INSTRUCTION_MEMORY_0.Mem[i] = instr_words[i];
+        if (instr_words[i] !== 32'bx)
+            $display("IM[%0d] = %b", i, instr_words[i]);
+    end
+
+    for (integer i = 14; i < 512; i = i + 1) begin
+        pipeline.INSTRUCTION_MEMORY_0.Mem[i] = 32'b0;
+    end
+
+    $display("=== Instruction Memory cargada ===\n");
+
     end
 
     // ================================
@@ -762,43 +652,316 @@ module TB4();
         forever #2 CLOCK = ~CLOCK; // periodo = 4ns
     end
 
-    // ================================
-    // 3. Reset
-    // ================================
     initial begin
         RESET = 1;
-        #5 RESET = 0;
+        #3 RESET = 0;
     end
 
-    // ================================
-    // 4. Print estilo TB3 — por etapa
-    // ================================
-    // always @(posedge CLOCK) begin
-    //     if (!RESET) begin
-    //         $display("\n[%0t]", $time);
-    //         $display("IF : PC=%0d | Instr=%b",
-    //             pipeline.IF_PC_WIRE,
-    //             pipeline.IF_INSTRUCTION_WIRE
-    //         ); 
-    //     end
-    // end
+integer cycle = 0;
 
-    always @(posedge CLOCK) begin
-    if (!RESET) begin
-        $display("IM[%0d] = %b | IF_INSTRUCTION=%b",
-            pipeline.IF_PC_WIRE,
-            pipeline.INSTRUCTION_MEMORY_0.Mem[pipeline.IF_PC_WIRE >> 2],
-            pipeline.IF_INSTRUCTION_WIRE
+always @(posedge CLOCK) begin
+    cycle = cycle + 1;
+    $display("\n====================== CYCLE %0d ======================", cycle);
+
+            $display("IF STAGE ----------------------------------------------");
+            $display("IF | PC=%0d  NPC=%0d  IR=%b",
+                 pipeline.IF_PC_WIRE,
+                 pipeline.NPC_WIRE,
+                 pipeline.IF_INSTRUCTION_WIRE);
+        
+            $display("IF_MUX | EX_PC_SEL = %b  TA = %b  ALU_OUT = %b  NPC = %b",
+                    pipeline.EX_CH_PC_SEL,
+                    pipeline.ID_TAG_WIRE,
+                    pipeline.EX_ALU_OUT_WIRE,
+                    pipeline.NPC_WIRE);
+
+        // ID
+        $display("ID_STAGE --------------------------------------------------------------");
+
+        $display("IF_ID_Pipeline_REG", 
+                 " | PC_in=%0d  IR_in=%b  => PC_out=%0d  IR_out=%b DHDU_LE=%b",
+                 pipeline.IF_PC_WIRE,
+                 pipeline.IF_INSTRUCTION_WIRE,
+                 pipeline.ID_PC_WIRE,
+                 pipeline.ID_INSTRUCTION_WIRE,
+                 pipeline.DHDU_LE_WIRE
         );
-         end
+        $display("ID | RF: RS1=%d RS2=%d RD=%0d  cond=%b  imm22=%0d",
+                 pipeline.ID_RS1_WIRE,
+                 pipeline.ID_RS2_WIRE,
+                 pipeline.ID_RD_WIRE,
+                 pipeline.ID_COND_WIRE,
+                 $signed(pipeline.ID_imm22));
+
+        $display("ID | CU: ALU_OP=%b SOH_OP=%b LOAD=%b BR=%b JUMPL=%b RF_LE=%b a=%b WE_PSR=%b CALL=%b SIZE=%b",
+                 pipeline.CU_ALU_OP_WIRE,
+                 pipeline.CU_SOH_OP_WIRE,
+                 pipeline.CU_LOAD_WIRE,
+                 pipeline.CU_BRANCH_WIRE,
+                 pipeline.CU_JUMPL_WIRE, 
+                 pipeline.CU_RF_LE_WIRE,
+                 pipeline.CU_a,
+                 pipeline.CU_WE_PSR_WIRE,  // ojo al nombre del wire aquí
+                 pipeline.CU_CALL_WIRE,
+                 pipeline.CU_MEM_SIZE_WIRE);
+
+        $display("CU debug: IR=%b OP=%b OP3=%b OP2=%b",
+         pipeline.ID_INSTRUCTION_WIRE,
+         pipeline.ID_INSTRUCTION_WIRE[31:30],
+         pipeline.ID_INSTRUCTION_WIRE[24:19],
+         pipeline.ID_INSTRUCTION_WIRE[24:22]
+);
+
+
+
+        // $display("ID | RD_INS=%0d MUX_RD=%0d",
+        //          pipeline.ID_RD_WIRE,
+        //          pipeline.ID_MUX_RD_WIRE
+        // );
+        $display("ID | TAG: PC=%d OFFSET=%b isBranch=%b isCALL=%b TA_OUT=%d ",
+            pipeline.ID_PC_WIRE,
+            pipeline.ID_OFFSET_WIRE,
+            pipeline.STALL_BRANCH_WIRE,
+            pipeline.STALL_CALL_WIRE,
+            pipeline.ID_TAG_WIRE
+        );
+        $display("FWD A MUX | PA=%0d  A_ALU=%0d A_MEM=%0d A_WB=%0d | SEL_A=%b | A_OUT=%0d",
+            pipeline.DF_PA_WIRE,
+            pipeline.EX_MUX_ALU_CALL,
+            pipeline.MEM_MUX_OUT_WIRE,
+            pipeline.WB_MUX_OUT_WIRE,
+            pipeline.DF_Sel_A_WIRE,
+            pipeline.DF_A_OUT_WIRE
+        );
+          $display("FWD B MUX | PB=%0d  B_ALU=%0d B_MEM=%0d B_WB=%0d | SEL_B=%b | B_OUT=%0d",
+            pipeline.DF_PB_WIRE,
+            pipeline.EX_MUX_ALU_CALL,
+            pipeline.MEM_MUX_OUT_WIRE,
+            pipeline.WB_MUX_OUT_WIRE,
+            pipeline.DF_Sel_B_WIRE,
+            pipeline.DF_B_OUT_WIRE
+        );
+        $display("FWD C MUX | PC=%0d  C_ALU=%0d C_MEM=%0d C_WB=%0d | SEL_C=%b | C_OUT=%0d",
+            pipeline.DF_PC_D_WIRE,
+            pipeline.EX_MUX_ALU_CALL,
+            pipeline.MEM_MUX_OUT_WIRE,
+            pipeline.WB_MUX_OUT_WIRE,
+            pipeline.DF_Sel_C_WIRE,
+            pipeline.DF_C_OUT_WIRE
+        );
+
+        $display("ID_EX_PIPELINE_REG_IN ALU_OP=%b SOH_OP=%b LOAD=%b RF_LE=%b a=%b WE_PSR=%b CALL=%b E=%b SIZE=%b RW=%b RD=%0d IMM22=%b DF_A=%0d DF_B=%0d DF_C=%0d",
+            pipeline.STALL_ALU_OP_WIRE,
+            pipeline.STALL_SOH_OP_WIRE,
+            pipeline.STALL_LOAD_WIRE,
+            pipeline.STALL_RF_LE_WIRE,
+            pipeline.STALL_a,
+            pipeline.STALL_WE_PSR_WIRE,
+            pipeline.STALL_CALL_WIRE,
+            pipeline.STALL_E_WIRE,
+            pipeline.STALL_MEM_SIZE_WIRE,
+            pipeline.STALL_RW_WIRE,
+            pipeline.ID_MUX_RD_WIRE,
+            pipeline.ID_imm22,
+            pipeline.DF_A_OUT_WIRE,
+            pipeline.DF_B_OUT_WIRE,
+            pipeline.DF_C_OUT_WIRE
+        );
+        $display("EX STAGE ---------------------------------------------------------------------------------------------------------------");
+
+        $display("ID_EX_PIPELINE_REG_OUT ALU_OP=%b SOH_OP=%b LOAD=%b RF_LE=%b a=%b WE_PSR=%b CALL=%b E=%b SIZE=%b RW=%b RD=%0d IMM22=%b A=%0d B=%0d PC_D=%0d PC_SEL=%b",
+            pipeline.EX_ALU_OP_WIRE,
+            pipeline.EX_SOH_IS_WIRE,
+            pipeline.EX_LOAD_WIRE,
+            pipeline.EX_RF_LE_WIRE,
+            pipeline.EX_a_WIRE,
+            pipeline.EX_WE_PSR_WIRE,
+            pipeline.EX_CALL_WIRE,
+            pipeline.EX_E_WIRE,
+            pipeline.EX_MEM_SIZE_WIRE,
+            pipeline.EX_RW_DM_WIRE,
+            pipeline.EX_RD_WIRE,
+            pipeline.EX_IMM22_WIRE,
+            pipeline.EX_ALU_A_WIRE,
+            pipeline.EX_SOH_R_WIRE,
+            pipeline.EX_PC_D_WIRE,
+            pipeline.PC_SEL_WIRE
+        );
+
+        $display("DHDU | ID_RS1=%0d ID_RS2=%0d EX_RD=%0d MEM_RD=%0d WB_RD=%0d | EX_RF_LE=%b MEM_RF_LE=%b WB_RF_LE=%b | SEL_A=%b SEL_B=%b",
+            pipeline.ID_RS1_WIRE,
+            pipeline.ID_RS2_WIRE,
+            pipeline.EX_RD_WIRE,
+            pipeline.MEM_RD_WIRE,
+            pipeline.WB_RD_WIRE,
+            pipeline.EX_RF_LE_WIRE,
+            pipeline.MEM_RF_LE_WIRE,
+            pipeline.WB_RF_LE_WIRE,
+            pipeline.DF_Sel_A_WIRE,
+            pipeline.DF_Sel_B_WIRE
+        );
+
+
+        $display("ALU: ALU_A=%d ALU_B=%d ALU_OUT=%d ALU_Z=%b ALU_N=%b ALU_V=%b ALU_C=%b",
+                $signed(pipeline.EX_ALU_A_WIRE),
+                $signed(pipeline.EX_SOH_N_WIRE),
+                $signed(pipeline.EX_ALU_OUT_WIRE),
+                pipeline.EX_ALU_Z_WIRE,
+                pipeline.EX_ALU_N_WIRE,
+                pipeline.EX_ALU_V_WIRE,
+                pipeline.EX_ALU_C_WIRE
+               );
+
+        $display("PSR_in: EX_WE_IN=%b ALU_Z=%b ALU_N=%b ALU_V=%b ALU_C=%b ",
+                pipeline.EX_WE_PSR_WIRE,
+                pipeline.EX_ALU_Z_WIRE,
+                pipeline.EX_ALU_Z_WIRE,
+                pipeline.EX_ALU_N_WIRE,
+                pipeline.EX_ALU_V_WIRE,
+                pipeline.EX_ALU_C_WIRE);
+
+        $display("PSR_out: PSR_Z=%b PSR_N=%b PSR_V=%b PSR_C=%b",
+                pipeline.EX_PSR_Z_WIRE,
+                pipeline.EX_PSR_N_WIRE,
+                pipeline.EX_PSR_V_WIRE,
+                pipeline.EX_PSR_C_WIRE);
+
+        $display("MUX_EX_ICC_out: EX_WE=%b MUX_Z=%b MUX_N=%b MUX_V=%b MUX_C=%b", 
+                pipeline.EX_WE_PSR_WIRE,
+                pipeline.EX_CH_Z_WIRE,
+                pipeline.EX_CH_N_WIRE,
+                pipeline.EX_CH_V_WIRE,
+                pipeline.EX_CH_C_WIRE,
+                );
+
+        $display("CH: PC_SEL_out=%b | BRANCH_in_id=%b CALL_in_id=%b JUMPL_in_id=%b Z=%b N=%b V=%b C=%b",
+        pipeline.EX_CH_PC_SEL,
+        pipeline.STALL_BRANCH_WIRE,
+        pipeline.STALL_CALL_WIRE,
+        pipeline.STALL_JUMPL_WIRE, 
+        pipeline.EX_CH_Z_WIRE, 
+        pipeline.EX_CH_N_WIRE, 
+        pipeline.EX_CH_V_WIRE,
+        pipeline.EX_CH_C_WIRE);
+
+        $display("EX_MEM_PIPELINE_REG_IN | load=%b size=%b e=%b rf=%b rw=%b alu=%h rd=%d pc=%h", 
+         pipeline.EX_LOAD_WIRE, 
+         pipeline.EX_MEM_SIZE_WIRE, 
+         pipeline.EX_E_WIRE,
+         pipeline.EX_RF_LE_WIRE, 
+         pipeline.EX_RW_DM_WIRE,
+         pipeline.EX_MUX_ALU_CALL, 
+         pipeline.EX_RD_WIRE, 
+         pipeline.DF_C_OUT_WIRE);
+
+        $display("MEM STAGE -------------------------------------------------------------------------");
+
+        $display("EX_MEM_PIPELINE_REG_OUT | load=%b size=%b e=%b rf=%b rw=%b alu=%h rd=%d pc=%h", 
+         pipeline.MEM_LOAD_WIRE, 
+         pipeline.MEM_SIZE_WIRE, 
+         pipeline.MEM_E_WIRE,
+         pipeline.MEM_RF_LE_WIRE, 
+         pipeline.MEM_RW_WIRE,  
+         pipeline.MEM_ALU_OUT_WIRE,
+         pipeline.MEM_RD_WIRE,
+         pipeline.MEM_DI_WIRE
+        );
+
+        $display("MEM | EX/MEM_ALU_OUT=%0d MUX_MEM_OUT=%0d RD=%0d",
+                pipeline.MEM_ALU_OUT_WIRE,
+                pipeline.MEM_MUX_OUT_WIRE,
+                pipeline.MEM_RD_WIRE
+        );
+        $display("MEM DM: | Address=%b DI=%0d DO=%0d RW=%b E=%b SIZE=%b",
+                pipeline.DM_A,
+                pipeline.MEM_DI_WIRE,
+                pipeline.MEM_DM_OUT_WIRE,
+                pipeline.MEM_RW_WIRE,
+                pipeline.MEM_E_WIRE,
+                pipeline.MEM_SIZE_WIRE);
+
+        $display("MEM_WB_PIPELINE_REG_IN | RF_LE=%b MUX_OUT=%0d RD=%0d",
+            pipeline.MEM_RF_LE_WIRE,
+            pipeline.MEM_MUX_OUT_WIRE,
+            pipeline.MEM_RD_WIRE
+        ); 
+        $display("WB STAGE --------------------------------------------------------------");
+        $display("MEM_WB_PIPELINE_REG_OUT | RF_LE=%b MUX_OUT=%0d RD=%0d",
+            pipeline.WB_RF_LE_WIRE,
+            pipeline.WB_MUX_OUT_WIRE,
+            pipeline.WB_RD_WIRE);       
+            //wb         
+        // $display("WB | RF_LE=%b  PD=%b  RD=%b",
+        //         pipeline.WB_RF_LE_WIRE,
+        //         pipeline.WB_MUX_OUT_WIRE,
+        //         pipeline.WB_RD_WIRE
+        // );
+
+            // // // REGISTER FILE STATE oara debug
+            // $display("RF-after wb | r5=%0d  r6=%0d  r16=%0d  r17=%0d  r18=%0d",
+            //          pipeline.RF_ID_0.registers[5],
+            //          pipeline.RF_ID_0.registers[6],
+            //          pipeline.RF_ID_0.registers[16],
+            //          pipeline.RF_ID_0.registers[17],
+            //          pipeline.RF_ID_0.registers[18]);
+
+            //register file para testcode1
+            $display("registros---------------------------------------------------------");
+            $display("RF | r0=%0d r1=%0d r2=%0d r3=%0d r4=%0d r5=%0d r6=%0d r7=%0d",
+                pipeline.RF_ID_0.registers[0],
+                pipeline.RF_ID_0.registers[1],
+                pipeline.RF_ID_0.registers[2],
+                $signed(pipeline.RF_ID_0.registers[3]),
+                pipeline.RF_ID_0.registers[4],
+                pipeline.RF_ID_0.registers[5],
+                pipeline.RF_ID_0.registers[6],
+                pipeline.RF_ID_0.registers[7]);
+            $display("RF | r8=%0d r9=%0d r10=%0d r11=%0d r12=%0d r13=%0d r14=%0d r15=%0d",
+                pipeline.RF_ID_0.registers[8],
+                pipeline.RF_ID_0.registers[9],
+                pipeline.RF_ID_0.registers[10],
+                pipeline.RF_ID_0.registers[11],
+                pipeline.RF_ID_0.registers[12],
+                pipeline.RF_ID_0.registers[13],
+                pipeline.RF_ID_0.registers[14],
+                pipeline.RF_ID_0.registers[15]);
+
+            $display("RF | r16=%0d r17=%0d r18=%0d r19=%0d r20=%0d r21=%0d r22=%0d r23=%0d",
+                pipeline.RF_ID_0.registers[16],
+                pipeline.RF_ID_0.registers[17],
+                pipeline.RF_ID_0.registers[18],
+                pipeline.RF_ID_0.registers[19],
+                pipeline.RF_ID_0.registers[20],
+                pipeline.RF_ID_0.registers[21],
+                pipeline.RF_ID_0.registers[22],
+                pipeline.RF_ID_0.registers[23]);
+            
+            $display("RF | r24=%0d r25=%0d r26=%0d r27=%0d r28=%0d r29=%0d r30=%0d r31=%0d",
+                pipeline.RF_ID_0.registers[24],
+                pipeline.RF_ID_0.registers[25],
+                pipeline.RF_ID_0.registers[26],
+                pipeline.RF_ID_0.registers[27],
+                pipeline.RF_ID_0.registers[28],
+                pipeline.RF_ID_0.registers[29],
+                pipeline.RF_ID_0.registers[30],
+                pipeline.RF_ID_0.registers[31]);
+
+
+   
+
+
+
+
+    $display("===========================================================\n");
     end
+
 
 
     // ================================
     // 5. Stop
     // ================================
     initial begin
-        #52 $finish;
+        #80 $finish;
     end
 
 endmodule

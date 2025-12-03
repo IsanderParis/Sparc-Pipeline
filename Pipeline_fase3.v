@@ -74,7 +74,7 @@ module Instruction_Memory(
 );
   reg [31:0] Mem [0:127];   // 128 instrucciones
 
-  assign instruction = Mem[pc_out >> 2]; 
+  assign instruction = Mem[pc_out >> 2];
 endmodule
 
 // =========================

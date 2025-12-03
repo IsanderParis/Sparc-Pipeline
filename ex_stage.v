@@ -335,12 +335,18 @@ module Registro_EX_MEM(
             E_mem      <= 0;
             size_mem   <= 2'b00;
             rw_dm_mem  <= 0;
+            mem_rd     <= 5'b0;
+            alu_out_mem<= 32'b0;
+            PC_D_mem   <= 32'b0;
         end else begin
             load_mem   <= load_ex;
             rf_le_mem  <= rf_le_ex;
             E_mem      <= E_ex;
             size_mem   <= size_ex;
             rw_dm_mem  <= rw_dm_ex;
+            mem_rd     <= ex_rd;
+            alu_out_mem<= alu_out_ex;
+            PC_D_mem   <= PC_D_ex;
         end
     end
 endmodule

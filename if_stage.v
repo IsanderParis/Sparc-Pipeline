@@ -12,8 +12,8 @@ module MUX_IF(
     always @(*) begin
         case (sel)
             2'b00: mux_out = npc_in;
-            2'b01: mux_out = alu_out;
-            2'b10: mux_out = ta;
+            2'b01: mux_out = ta;
+            2'b10: mux_out = alu_out;
             default: mux_out = 32'b0;
         endcase
     end
@@ -50,14 +50,14 @@ module PC_IF(
     input        clk,           // reloj
     input        LE,            // Load Enable
     input        R,             // Reset
-    input  [31:0] nPC,          // entrada desde NPC_IF
+    input  [31:0] mux_out,          // entrada desde NPC_IF
     output reg [31:0] pc_out    // salida: PC actual
 );
     always @(posedge clk) begin
         if (R)
             pc_out <= 0;
         else if (LE)
-            pc_out <= nPC;
+            pc_out <= mux_out;
     end
 endmodule
 
@@ -67,12 +67,7 @@ module Instruction_Memory(
   input  [31:0] pc_out,
   output [31:0] instruction
 );
-  reg [31:0] Mem [0:511];   // 128 instrucciones
-  integer i;
-  initial begin
-    for (i = 0; i < 511; i = i + 1)
-      Mem[i] = 32'b0;       // NOP por defecto
-  end
+  reg [31:0] Mem [0:511];   
 
   assign instruction = Mem[pc_out >> 2];
 endmodule
