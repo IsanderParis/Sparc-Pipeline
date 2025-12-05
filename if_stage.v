@@ -83,8 +83,6 @@ module Instruction_Memory (
   initial begin
     // Limpia toda la ROM a 0
     for (k = 0; k < 512; k = k + 1) imem[k] = 8'h00;
-    // Carga solo los primeros 16 bytes para evitar warnings
-    $readmemb("precharge_code.txt", imem, 0, 15);
   end
 
 //   Lectura big-endian (A = byte más significativo del word)
