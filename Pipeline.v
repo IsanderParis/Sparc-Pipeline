@@ -8,6 +8,10 @@ module Pipeline (
 // IF
 //=========================
 wire [31:0] IF_PC_WIRE; 
+wire [8:0] IM_A;
+assign IM_A = IF_PC_WIRE[8:0];
+
+
 wire [31:0] IF_NPC_WIRE; 
 wire [31:0] IF_INSTRUCTION_WIRE;
 wire [31:0] IF_MUX_WIRE;
@@ -218,8 +222,8 @@ PC_IF PC_IF_0 (
 //     .npc(IF_NPC_WIRE)
 // );
 Instruction_Memory INSTRUCTION_MEMORY_0 ( // cambiarlo al otro im
-    .pc_out(IF_PC_WIRE),
-    .instruction(IF_INSTRUCTION_WIRE)
+    .A(IM_A),
+    .I(IF_INSTRUCTION_WIRE)
 );
 Registro_IF_ID REG_IF_ID_0 ( 
     .clk(CLOCK),
@@ -227,6 +231,7 @@ Registro_IF_ID REG_IF_ID_0 (
     .LE(DHDU_LE_WIRE),
     .pc_in(IF_PC_WIRE),
     .instruction_in(IF_INSTRUCTION_WIRE),
+
     .pc_out(ID_PC_WIRE),
     .instruction_out(ID_INSTRUCTION_WIRE),
     .CH_clear(clr_IF_WIRE)
@@ -625,7 +630,7 @@ endmodule
 
 //     for (integer i = 0; i < 14; i = i + 1) begin
 //         pipeline.INSTRUCTION_MEMORY_0.Mem[i] = instr_words[i];
-//         if (instr_words[i] !== 32'bx)
+//         // if (instr_words[i] !== 32'bx)
 //             //$display("IM[%0d] = %b", i, instr_words[i]);
 //     end
 
@@ -663,7 +668,7 @@ endmodule
 //                 pipeline.RF_ID_0.registers[16],
 //                 pipeline.RF_ID_0.registers[17],
 //                 pipeline.RF_ID_0.registers[18]);
-//             
+            
 //     end
 
 // endmodule
@@ -874,111 +879,114 @@ endmodule
 
 // endmodule
 
-// module TB4();
+module TB4();
 
-//     reg CLOCK;
-//     reg RESET;
+    reg CLOCK;
+    reg RESET;
 
-//     // Instancia del pipeline
-//     Pipeline pipeline (
-//         .CLOCK(CLOCK),
-//         .RESET(RESET)
-//     );
+    // Instancia del pipeline
+    Pipeline pipeline (
+        .CLOCK(CLOCK),
+        .RESET(RESET)
+    );
 
-//     // Cargar Instrucciones
-//     reg [31:0] instr_words [0:511];
-//     initial begin
+    // Cargar Instrucciones
+    reg [31:0] instr_words [0:511];
+    initial begin
 
-//     // LIMPIAR INSTRUCTION MEMORY
-//     $display("Limpiando Instruction Memory...");
-//     for (integer i = 0; i < 512; i = i + 1) begin
-//         pipeline.INSTRUCTION_MEMORY_0.Mem[i] = 32'b0;
-//     end
+    // LIMPIAR INSTRUCTION MEMORY
+    $display("Limpiando Instruction Memory...");
+    for (integer i = 0; i < 512; i = i + 1) begin
+        pipeline.INSTRUCTION_MEMORY_0.imem[i] = 32'b0;
+    end
 
-//     // LIMPIAR Y PRECARGAR DATA MEMORY
-//     $display("Limpiando Data Memory...");
-//     for (integer j = 0; j < 512; j = j + 1) begin
-//         pipeline.DM_0.mem[j] = 8'h00;
-//     end
+    // LIMPIAR Y PRECARGAR DATA MEMORY
+    $display("Limpiando Data Memory...");
+    for (integer j = 0; j < 512; j = j + 1) begin
+        pipeline.DM_0.mem[j] = 8'h00;
+    end
 
-//     // PRELOAD REQUERIDO PARA debugfile
-//     pipeline.DM_0.mem[56] = 8'd5;    // primer byte
-//     pipeline.DM_0.mem[57] = 8'd20;   // segundo byte
-//     pipeline.DM_0.mem[58] = 8'd7;    // tercer byte
-//     pipeline.DM_0.mem[59] = 8'd27;
+    // PRELOAD REQUERIDO PARA debugfile
+    pipeline.DM_0.mem[56] = 8'd5;    // primer byte
+    pipeline.DM_0.mem[57] = 8'd20;   // segundo byte
+    pipeline.DM_0.mem[58] = 8'd7;    // tercer byte
+    pipeline.DM_0.mem[59] = 8'd27;
 
   
 
-//     // PRINT DM PRECARGADA debugfile
-//     // $display("=== Data Memory Pre-Loaded ===");
-//     // $display("DM[56] = %0d", pipeline.DM_0.mem[56]);
-//     // $display("DM[57] = %0d", pipeline.DM_0.mem[57]);
-//     // $display("DM[58] = %0d", pipeline.DM_0.mem[58]);
-//     // $display("==============================\n");
+    // PRINT DM PRECARGADA debugfile
+    // $display("=== Data Memory Pre-Loaded ===");
+    // $display("DM[56] = %0d", pipeline.DM_0.mem[56]);
+    // $display("DM[57] = %0d", pipeline.DM_0.mem[57]);
+    // $display("DM[58] = %0d", pipeline.DM_0.mem[58]);
+    // $display("==============================\n");
 
 
-//     // =====================
-//     // CARGAR INSTRUCTION MEMORY
-//     // =====================
-//     $display("=== Cargando debugging_code_SPARC.txt ===");
-//     //leer debugging code
-//     $readmemb("test/debugging_code_SPARC.txt", instr_words);
+    // =====================
+    // CARGAR INSTRUCTION MEMORY
+    // =====================
+    $display("=== Cargando debugging_code_SPARC.txt ===");
+    //leer debugging code
+    $readmemb("test/debugging_code_SPARC.txt", instr_words);
 
-//     //leer testcode1
-//     // $readmemb("test/testcode_sparc1.txt", instr_words);
+    //leer testcode1
+    // $readmemb("test/testcode_sparc1.txt", instr_words);
 
-//     //leer testcode2 (56)
-//     // $readmemb("test/testcode_sparc2.txt", instr_words);
+    //leer testcode2 (56)
+    // $readmemb("test/testcode_sparc2.txt", instr_words);
 
-//     //leer testcode2
+    //leer testcode2
 
-//     for (integer i = 0; i < 14; i = i + 1) begin
-//         pipeline.INSTRUCTION_MEMORY_0.Mem[i] = instr_words[i];
-//         if (instr_words[i] !== 32'bx)
-//             $display("IM[%0d] = %b", i, instr_words[i]);
-//     end
+    for (integer i = 0; i < 15; i = i + 1) begin
+        pipeline.INSTRUCTION_MEMORY_0.imem[i] = instr_words[i];
+        if (instr_words[i] !== 32'bx)
+            $display("IM[%0d] = %b", i, instr_words[i]);
+    end
 
-//     for (integer i = 14; i < 512; i = i + 1) begin
-//         pipeline.INSTRUCTION_MEMORY_0.Mem[i] = 32'b0;
-//     end
+    // for (integer i = 15; i < 512; i = i + 1) begin
+    //     pipeline.INSTRUCTION_MEMORY_0.Mem[i] = 32'b0;
+    // end
 
-//     $display("=== Instruction Memory cargada ===\n");
+    $display("=== Instruction Memory cargada ===\n");
 
-//     end
+    end
 
-//     // ================================
-//     // 2. Clock
-//     // ================================
-//     initial begin
-//         CLOCK = 0;
-//         forever #2 CLOCK = ~CLOCK; // periodo = 4ns
-//     end
+    // ================================
+    // 2. Clock
+    // ================================
+    initial begin
+        CLOCK = 0;
+        forever #2 CLOCK = ~CLOCK; // periodo = 4ns
+    end
 
-//     initial begin
-//         RESET = 1;
-//         #3 RESET = 0;
-//     end
+    initial begin
+        RESET = 1;
+        #3 RESET = 0;
+    end
 
-// integer cycle = 0;
+integer cycle = 0;
 
-// always @(posedge CLOCK) begin
-// //     cycle = cycle + 1;
+always @(posedge CLOCK) begin
+    cycle = cycle + 1;
 
 
-//     $display("\n====================== CYCLE %0d ======================", cycle);
+    $display("\n====================== CYCLE %0d ======================", cycle);
 
-//             $display("IF STAGE ----------------------------------------------");
-//             $display("IF | PC=%0d  NPC=%0d  IR=%b",
-//                  pipeline.IF_PC_WIRE,
-//                  pipeline.NPC_WIRE,
-//                  pipeline.IF_INSTRUCTION_WIRE);
+            $display("IF STAGE ----------------------------------------------");
+            $display("IF | PC=%0d  NPC=%0d  IR=%b",
+                 pipeline.IF_PC_WIRE,
+                 pipeline.NPC_WIRE,
+                 pipeline.IF_INSTRUCTION_WIRE);
         
-//             $display("IF_MUX | EX_PC_SEL = %b  TA = %b  ALU_OUT = %b  NPC = %b",
-//                     pipeline.EX_CH_PC_SEL,
-//                     pipeline.ID_TAG_WIRE,
-//                     pipeline.EX_ALU_OUT_WIRE,
-//                     pipeline.NPC_WIRE);
-//             $display("\n");
+            $display("IF_MUX | EX_PC_SEL = %b  TA = %b  ALU_OUT = %b  NPC = %b",
+                    pipeline.EX_CH_PC_SEL,
+                    pipeline.ID_TAG_WIRE,
+                    pipeline.EX_ALU_OUT_WIRE,
+                    pipeline.NPC_WIRE);
+            $display("IF_IM | addres_in=%b instrucion_out=%b",
+                    pipeline.IM_A,
+                    pipeline.IF_INSTRUCTION_WIRE);
+            $display("\n");
 
 
 //         // ID
@@ -1199,19 +1207,19 @@ endmodule
 //             pipeline.WB_MUX_OUT_WIRE,
 //             pipeline.WB_RD_WIRE);       
 //             //wb         
-        // $display("WB | RF_LE=%b  PD=%b  RD=%b",
-        //         pipeline.WB_RF_LE_WIRE,
-        //         pipeline.WB_MUX_OUT_WIRE,
-        //         pipeline.WB_RD_WIRE
-        // );
+//         $display("WB | RF_LE=%b  PD=%b  RD=%b",
+//                 pipeline.WB_RF_LE_WIRE,
+//                 pipeline.WB_MUX_OUT_WIRE,
+//                 pipeline.WB_RD_WIRE
+//         );
 
-            // // // REGISTER FILE STATE oara debug
-            // $display("RF-after wb | r5=%0d  r6=%0d  r16=%0d  r17=%0d  r18=%0d",
-            //          pipeline.RF_ID_0.registers[5],
-            //          pipeline.RF_ID_0.registers[6],
-            //          pipeline.RF_ID_0.registers[16],
-            //          pipeline.RF_ID_0.registers[17],
-            //          pipeline.RF_ID_0.registers[18]);
+//             // // REGISTER FILE STATE oara debug
+//             $display("RF-after wb | r5=%0d  r6=%0d  r16=%0d  r17=%0d  r18=%0d",
+//                      pipeline.RF_ID_0.registers[5],
+//                      pipeline.RF_ID_0.registers[6],
+//                      pipeline.RF_ID_0.registers[16],
+//                      pipeline.RF_ID_0.registers[17],
+//                      pipeline.RF_ID_0.registers[18]);
 
 //             //register file para testcode1
 //             $display("\n");
@@ -1235,52 +1243,52 @@ endmodule
 //                 pipeline.RF_ID_0.registers[14],
 //                 pipeline.RF_ID_0.registers[15]);
 
-//         // initial begin
-//         //     #76;
-//         //     $display("Tiempo 76: ...");
-//         // end
+        // initial begin
+        //     #76;
+        //     $display("Tiempo 76: ...");
+        // end
 
-//         //debug file
-//         if ($time == 76) begin
-//             $display("Word at address 56 = %b", pipeline.DM_0.mem[56]);
-//             $display("\n");
-//         end
+        //debug file
+        if ($time == 76) begin
+            $display("Word at address 56 = %b", pipeline.DM_0.mem[56]);
+            $display("\n");
+        end
 
-//         // //test1
-//         // if ($time == 160) begin
-//         //     $display("Word at address 44 = %b", pipeline.DM_0.mem[44]);
-//         // $display("\n");
-//         // end
+        // //test1
+        // if ($time == 160) begin
+        //     $display("Word at address 44 = %b", pipeline.DM_0.mem[44]);
+        // $display("\n");
+        // end
 
-//         // //test2
-//         // if ($time == 240) begin
-//         //     $display("Word at address 44 = %b", pipeline.DM_0.mem[224]);
-//         //     $display("Word at address 44 = %b", pipeline.DM_0.mem[224]);
-//         // $display("\n");
-//         // end
-
-
-
-//     $display("===========================================================\n");
-//     end
+        // //test2
+        // if ($time == 240) begin
+        //     $display("Word at address 44 = %b", pipeline.DM_0.mem[224]);
+        //     $display("Word at address 44 = %b", pipeline.DM_0.mem[224]);
+        // $display("\n");
+        // end
 
 
 
-
-//     // Stop debug
-//     initial begin
-//         #76 $display("Word at address 56 = %b", pipeline.DM_0.mem[56]);
-//         #80 $finish;
-//     end
-//     // test 1
-//     // initial begin
-//     //     #164 $finish;
-//     // end
-//     // //test 2
-//     // initial begin
-//     //     #244 $finish;
-//     // end
+    $display("===========================================================\n");
+    end
 
 
 
-// endmodule
+
+    // Stop debug
+    initial begin
+        // #76 $display("Word at address 56 = %b", pipeline.DM_0.mem[56]);
+        #80 $finish;
+    end
+    // test 1
+    // initial begin
+    //     #164 $finish;
+    // end
+    // //test 2
+    // initial begin
+    //     #244 $finish;
+    // end
+
+
+
+endmodule

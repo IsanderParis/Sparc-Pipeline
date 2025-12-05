@@ -246,7 +246,7 @@ module CU_ID(
                 // OP = 10 ‚Üí ALU / SHIFT / JMPL (formato 3)
                 2'b10: begin
                 
-                    ID_SOH_OP_out = bit_i ? 4'b1001 : 4'b1000;
+                    ID_SOH_OP_out = bit_i ? 4'b1101 : 4'b1000;
                     ID_RF_LE_out  = 1'b1;        // casi todas escriben en rd
 
                     case (op3)
