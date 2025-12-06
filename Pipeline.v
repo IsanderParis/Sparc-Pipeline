@@ -586,90 +586,7 @@ endmodule
 
 ///////////////////////
 
-module TB_DEBUGG_FILE();
-    
-    reg CLOCK;
-    reg RESET;
-
-    // Instancia del pipeline
-    Pipeline pipeline (
-        .CLOCK(CLOCK),
-        .RESET(RESET)
-    );
-
-    // Cargar Instrucciones
-    reg [7:0] instr_bytes [0:511];
-    initial begin
-
-    // LIMPIAR INSTRUCTION MEMORY
-    $display("Limpiando Instruction y Data Memory..");
-    for (integer i = 0; i < 512; i = i + 1) begin
-        pipeline.INSTRUCTION_MEMORY_0.imem[i] = 32'b0;
-        pipeline.DM_0.mem[i] = 8'h00;
-    end
-
-    // PRELOAD REQUERIDO PARA debugfile
-    pipeline.DM_0.mem[56] = 8'd5;    // primer byte
-    pipeline.DM_0.mem[57] = 8'd20;   // segundo byte
-    pipeline.DM_0.mem[58] = 8'd7;    // tercer byte
-    pipeline.DM_0.mem[59] = 8'd27;
-
-    // PRINT DM PRECARGADA debugfile
-    $display("=== Data Memory Pre-Loaded ===");
-    $display("DM[56] = %0d", pipeline.DM_0.mem[56]);
-    $display("DM[57] = %0d", pipeline.DM_0.mem[57]);
-    $display("DM[58] = %0d", pipeline.DM_0.mem[58]);
-    $display("==============================\n");
-
-    // CARGAR INSTRUCTION MEMORY
-    $display("=== Cargando debugging_code_SPARC.txt ===");
-
-    //leer debugging code
-    $readmemb("test/debugging_code_SPARC.txt", instr_bytes);
-
-    for (integer i = 0; i < 511; i = i + 1) begin
-        pipeline.INSTRUCTION_MEMORY_0.imem[i] = instr_bytes[i];
-        $display("IM[%0d] = %b", i, instr_bytes[i]);
-    end
-
-    $display("=== Instruction Memory cargada ===\n");
-
-    end
-
-    initial begin
-        CLOCK = 0;
-        forever #2 CLOCK = ~CLOCK; // periodo = 4ns
-    end
-
-    initial begin
-        RESET = 1;
-        #3 RESET = 0;
-    end
-
-    initial begin
-        #80;
-        $finish;
-    end
-
-    initial begin
-        #76 $display("Word at address 56 = %d", pipeline.DM_0.mem[56]);
-    end
-    always @(posedge CLOCK) begin
-            $display("PC=%0d | r5=%0d r6=%0d r16=%0d r17=%0d r18=%0d",
-                pipeline.IF_PC_WIRE,
-                pipeline.RF_ID_0.q5,
-                $signed(pipeline.RF_ID_0.q6),
-                pipeline.RF_ID_0.q16,
-                pipeline.RF_ID_0.q17,
-                pipeline.RF_ID_0.q18);
-            
-    end
-
-endmodule
-
-/////////
-
-// module TB_1();
+// module TB_DEBUGG_FILE();
     
 //     reg CLOCK;
 //     reg RESET;
@@ -681,17 +598,14 @@ endmodule
 //     );
 
 //     // Cargar Instrucciones
-//     reg [31:0] instr_words [0:511];
+//     reg [7:0] instr_bytes [0:511];
 //     initial begin
 
 //     // LIMPIAR INSTRUCTION MEMORY
+//     $display("Limpiando Instruction y Data Memory..");
 //     for (integer i = 0; i < 512; i = i + 1) begin
-//         pipeline.INSTRUCTION_MEMORY_0.Mem[i] = 32'b0;
-//     end
-
-//     // LIMPIAR Y PRECARGAR DATA MEMORY
-//     for (integer j = 0; j < 512; j = j + 1) begin
-//         pipeline.DM_0.mem[j] = 8'h00;
+//         pipeline.INSTRUCTION_MEMORY_0.imem[i] = 32'b0;
+//         pipeline.DM_0.mem[i] = 8'h00;
 //     end
 
 //     // PRELOAD REQUERIDO PARA debugfile
@@ -700,30 +614,110 @@ endmodule
 //     pipeline.DM_0.mem[58] = 8'd7;    // tercer byte
 //     pipeline.DM_0.mem[59] = 8'd27;
 
-  
-
 //     // PRINT DM PRECARGADA debugfile
-//     // $display("=== Data Memory Pre-Loaded ===");
-//     // $display("DM[56] = %0d", pipeline.DM_0.mem[56]);
-//     // $display("DM[57] = %0d", pipeline.DM_0.mem[57]);
-//     // $display("DM[58] = %0d", pipeline.DM_0.mem[58]);
-//     // $display("==============================\n");
-
+//     $display("=== Data Memory Pre-Loaded ===");
+//     $display("DM[56] = %0d", pipeline.DM_0.mem[56]);
+//     $display("DM[57] = %0d", pipeline.DM_0.mem[57]);
+//     $display("DM[58] = %0d", pipeline.DM_0.mem[58]);
+//     $display("==============================\n");
 
 //     // CARGAR INSTRUCTION MEMORY
 //     $display("=== Cargando debugging_code_SPARC.txt ===");
 
-//     //leer test1 code
-//     $readmemb("test/testcode_sparc1.txt", instr_words);
+//     //leer debugging code
+//     $readmemb("test/debugging_code_SPARC.txt", instr_bytes);
 
-//     for (integer i = 0; i < 80; i = i + 1) begin
-//         pipeline.INSTRUCTION_MEMORY_0.Mem[i] = instr_words[i];
-//         // if (instr_words[i] !== 32'bx)
-//             // $display("IM[%0d] = %b", i, instr_words[i]);
+//     for (integer i = 0; i < 511; i = i + 1) begin
+//         pipeline.INSTRUCTION_MEMORY_0.imem[i] = instr_bytes[i];
+//         $display("IM[%0d] = %b", i, instr_bytes[i]);
 //     end
 
-//     for (integer i = 14; i < 512; i = i + 1) begin
-//         pipeline.INSTRUCTION_MEMORY_0.Mem[i] = 32'b0;
+//     $display("=== Instruction Memory cargada ===\n");
+
+//     end
+
+//     initial begin
+//         CLOCK = 0;
+//         forever #2 CLOCK = ~CLOCK; // periodo = 4ns
+//     end
+
+//     initial begin
+//         RESET = 1;
+//         #3 RESET = 0;
+//     end
+
+//     initial begin
+//         #80;
+//         $finish;
+//     end
+
+    // initial begin
+    //    $display("Word at address 56: %b %b %b %b",
+    //         pipeline.DM_0.mem[56],
+    //         pipeline.DM_0.mem[57],
+    //         pipeline.DM_0.mem[58],
+    //         pipeline.DM_0.mem[59]
+    //     );
+    // end
+//     always @(posedge CLOCK) begin
+//             $display("PC=%0d | r5=%0d r6=%0d r16=%0d r17=%0d r18=%0d",
+//                 pipeline.IF_PC_WIRE,
+//                 pipeline.RF_ID_0.q5,
+//                 $signed(pipeline.RF_ID_0.q6),
+//                 pipeline.RF_ID_0.q16,
+//                 pipeline.RF_ID_0.q17,
+//                 pipeline.RF_ID_0.q18);
+            
+//     end
+
+// endmodule
+
+/////////
+
+// module TB_1();
+     
+//     reg CLOCK;
+//     reg RESET;
+
+//     // Instancia del pipeline
+//     Pipeline pipeline (
+//         .CLOCK(CLOCK),
+//         .RESET(RESET)
+//     );
+
+//     // Cargar Instrucciones
+//     reg [7:0] instr_bytes [0:511];
+//     initial begin
+
+//     // LIMPIAR INSTRUCTION MEMORY
+//     $display("Limpiando Instruction y Data Memory..");
+//     for (integer i = 0; i < 512; i = i + 1) begin
+//         pipeline.INSTRUCTION_MEMORY_0.imem[i] = 32'b0;
+//         pipeline.DM_0.mem[i] = 8'h00;
+//     end
+
+//     // PRELOAD REQUERIDO PARA debugfile
+//     pipeline.DM_0.mem[56] = 8'd5;    // primer byte
+//     pipeline.DM_0.mem[57] = 8'd20;   // segundo byte
+//     pipeline.DM_0.mem[58] = 8'd7;    // tercer byte
+//     pipeline.DM_0.mem[59] = 8'd27;
+
+//     // PRINT DM PRECARGADA debugfile
+//     $display("=== Data Memory Pre-Loaded ===");
+//     $display("DM[56] = %0d", pipeline.DM_0.mem[56]);
+//     $display("DM[57] = %0d", pipeline.DM_0.mem[57]);
+//     $display("DM[58] = %0d", pipeline.DM_0.mem[58]);
+//     $display("==============================\n");
+
+//     // CARGAR INSTRUCTION MEMORY
+//     $display("=== Cargando debugging_code_SPARC.txt ===");
+
+//     //leer debugging code
+//     $readmemb("test/testcode_sparc1.txt", instr_bytes);
+
+//     for (integer i = 0; i < 511; i = i + 1) begin
+//         pipeline.INSTRUCTION_MEMORY_0.imem[i] = instr_bytes[i];
+//         $display("IM[%0d] = %b", i, instr_bytes[i]);
 //     end
 
 //     $display("=== Instruction Memory cargada ===\n");
@@ -746,23 +740,29 @@ endmodule
 //     end
 
 //     initial begin
-//         #160 $display("Word at address 44 = %d", pipeline.DM_0.mem[44]);
+//        #160 begin
+//         $display("Word at address 44: %b %b %b %b",
+//             pipeline.DM_0.mem[44],
+//             pipeline.DM_0.mem[45],
+//             pipeline.DM_0.mem[46],
+//             pipeline.DM_0.mem[47]
+//         );
+//         end
 //     end
+
 //     always @(posedge CLOCK) begin
-//             $display("PC=%0d | DM_Address=%0d r1=%0d r2=%0d r3=%0d r5=%0d",
+//             $display("PC=%0d | r1=%0d r2=%0d r3=%0d r5=%0d",
 //                 pipeline.IF_PC_WIRE,
-//                 pipeline.DM_A,
-//                 pipeline.RF_ID_0.registers[1],
-//                 pipeline.RF_ID_0.registers[2],
-//                 $signed(pipeline.RF_ID_0.registers[3]),
-//                 pipeline.RF_ID_0.registers[5],
-//                 pipeline.RF_ID_0.registers[18]);
+//                 pipeline.RF_ID_0.q1,
+//                 pipeline.RF_ID_0.q2,
+//                 $signed(pipeline.RF_ID_0.q3),
+//                 pipeline.RF_ID_0.q5);
 //     end
 
 // endmodule
 
 // module TB_2();
-    
+     
 //     reg CLOCK;
 //     reg RESET;
 
@@ -773,17 +773,14 @@ endmodule
 //     );
 
 //     // Cargar Instrucciones
-//     reg [31:0] instr_words [0:511];
+//     reg [7:0] instr_bytes [0:511];
 //     initial begin
 
 //     // LIMPIAR INSTRUCTION MEMORY
+//     $display("Limpiando Instruction y Data Memory..");
 //     for (integer i = 0; i < 512; i = i + 1) begin
-//         pipeline.INSTRUCTION_MEMORY_0.Mem[i] = 32'b0;
-//     end
-
-//     // LIMPIAR Y PRECARGAR DATA MEMORY
-//     for (integer j = 0; j < 512; j = j + 1) begin
-//         pipeline.DM_0.mem[j] = 8'h00;
+//         pipeline.INSTRUCTION_MEMORY_0.imem[i] = 32'b0;
+//         pipeline.DM_0.mem[i] = 8'h00;
 //     end
 
 //     // PRELOAD REQUERIDO PARA debugfile
@@ -792,29 +789,22 @@ endmodule
 //     pipeline.DM_0.mem[58] = 8'd7;    // tercer byte
 //     pipeline.DM_0.mem[59] = 8'd27;
 
-  
-
 //     // PRINT DM PRECARGADA debugfile
-//     // $display("=== Data Memory Pre-Loaded ===");
-//     // $display("DM[56] = %0d", pipeline.DM_0.mem[56]);
-//     // $display("DM[57] = %0d", pipeline.DM_0.mem[57]);
-//     // $display("DM[58] = %0d", pipeline.DM_0.mem[58]);
-//     // $display("==============================\n");
-
+//     $display("=== Data Memory Pre-Loaded ===");
+//     $display("DM[56] = %0d", pipeline.DM_0.mem[56]);
+//     $display("DM[57] = %0d", pipeline.DM_0.mem[57]);
+//     $display("DM[58] = %0d", pipeline.DM_0.mem[58]);
+//     $display("==============================\n");
 
 //     // CARGAR INSTRUCTION MEMORY
 //     $display("=== Cargando debugging_code_SPARC.txt ===");
 
-//     //leer test2 code
-//     $readmemb("test/testcode_sparc2.txt", instr_words);
+//     //leer debugging code
+//     $readmemb("test/testcode_sparc2.txt", instr_bytes);
 
-//     for (integer i = 0; i < 14; i = i + 1) begin
-//         pipeline.INSTRUCTION_MEMORY_0.Mem[i] = instr_words[i];
-//         // if (instr_words[i] !== 32'bx)
-//     end
-
-//     for (integer i = 14; i < 512; i = i + 1) begin
-//         pipeline.INSTRUCTION_MEMORY_0.Mem[i] = 32'b0;
+//     for (integer i = 0; i < 511; i = i + 1) begin
+//         pipeline.INSTRUCTION_MEMORY_0.imem[i] = instr_bytes[i];
+//         $display("IM[%0d] = %b", i, instr_bytes[i]);
 //     end
 
 //     $display("=== Instruction Memory cargada ===\n");
@@ -835,40 +825,41 @@ endmodule
 //         #244;
 //         $finish;
 //     end
+//         integer addr;
+//         integer count;
 
-//     integer i, count;
 //     initial begin
 //         #240;
+//         $display("Contenido las localizaciones de la 224 a la 263");
 //         count = 0;
 
-//         $display("\n=== Data Memory 224–263 ===");
-
-//         for (i = 224; i <= 263; i = i + 1) begin
-//             $write("%b ", pipeline.DM_0.mem[i]);
+//         for (addr = 224; addr <= 263; addr = addr + 1) begin
+//             $write("%08b ", pipeline.DM_0.mem[addr]);   // imprime byte en binario
 
 //             count = count + 1;
 //             if (count == 4) begin
-//                 $write("\n");
+//                 $write("\n");   // salto de línea después de 4 bytes
 //                 count = 0;
 //             end
 //         end
 
-//     end
+//         if (count != 0) $write("\n");
+
+// end
 
 //     always @(posedge CLOCK) begin
-//             $display("PC=%0d | DM_Address=%0d r1=%0d r2=%0d r3=%0d r4=%0d r5=%0d r8=%0d r10=%0d r11=%0d r12=%0d r15=%0d",
+//             $display("PC=%0d | r1=%0d r2=%0d r3=%0d r4=%0d r5=%0d r8=%0d r10=%0d r11=%0d r12=%0d r15=%0d",
 //                 pipeline.IF_PC_WIRE,
-//                 pipeline.DM_A,
-//                 pipeline.RF_ID_0.registers[1],
-//                 pipeline.RF_ID_0.registers[2],
-//                 pipeline.RF_ID_0.registers[3],
-//                 pipeline.RF_ID_0.registers[4],
-//                 $signed(pipeline.RF_ID_0.registers[5]),
-//                 pipeline.RF_ID_0.registers[8],
-//                 pipeline.RF_ID_0.registers[10],
-//                 pipeline.RF_ID_0.registers[11],
-//                 pipeline.RF_ID_0.registers[12],
-//                 pipeline.RF_ID_0.registers[15]);
+//                 pipeline.RF_ID_0.q1,
+//                 pipeline.RF_ID_0.q2,
+//                 pipeline.RF_ID_0.q3,
+//                 pipeline.RF_ID_0.q4,
+//                 pipeline.RF_ID_0.q5,
+//                 pipeline.RF_ID_0.q8,
+//                 pipeline.RF_ID_0.q10,
+//                 pipeline.RF_ID_0.q11,
+//                 pipeline.RF_ID_0.q12,
+//                 pipeline.RF_ID_0.q15,);
 //     end
 
 // endmodule
