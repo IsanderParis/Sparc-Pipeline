@@ -891,7 +891,7 @@ module TB4();
     );
 
     // Cargar Instrucciones
-    reg [8:0] instr_words [0:511];
+    reg [7:0] instr_words [0:511];
     initial begin
 
     // LIMPIAR INSTRUCTION MEMORY
