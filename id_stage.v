@@ -328,6 +328,7 @@ module CU_ID(
     output reg [63:0] keyword,
     output reg       ID_JUMPL_out,
     output reg       ID_BRANCH_out
+
 );
 
     // ==========
@@ -672,6 +673,9 @@ module CU_ID(
                             ID_RW_DM_out = 1'b1;
                             ID_SIZE_out  = 2'b00;
                             keyword      = "STB     ";
+                            ID_LOAD_out = 0;
+                            ID_RF_LE_out = 0; 
+
                         end
 
                         // ------ STH ------
@@ -686,6 +690,8 @@ module CU_ID(
                             ID_RW_DM_out = 1'b1;
                             ID_SIZE_out  = 2'b10; // mismo control b√°sico
                             keyword      = "STD";
+                            ID_LOAD_out = 0;
+                            ID_RF_LE_out = 0; 
                         end
 
                         // ------ LDSTUB (atomic, aqu√≠ como LDUB b√°sica) ------
@@ -712,6 +718,7 @@ module CU_ID(
 
                 default: begin
                     keyword = "UNKNOWN";
+                    ID_LOAD_out = 1'b0;
                 end
             endcase
         end
