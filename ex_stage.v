@@ -97,12 +97,21 @@ module MUX_EX_ICC(
             CH_N = PSR_N;
             CH_V = PSR_V;
             CH_C = PSR_C;
+            // CH_Z = ALU_Z;
+            // CH_N = ALU_N;
+            // CH_V = ALU_V;
+            // CH_C = ALU_C;
         end else begin
             CH_Z = ALU_Z;
             CH_N = ALU_N;
             CH_V = ALU_V;
             CH_C = ALU_C;
+            // CH_Z = PSR_Z;
+            // CH_N = PSR_N;
+            // CH_V = PSR_V;
+            // CH_C = PSR_C;
         end
+
     end
 endmodule
 
@@ -112,13 +121,14 @@ module Program_Status_Register(
     output reg PSR_Z, PSR_N, PSR_V, PSR_C   
 );
     always @(posedge clk) begin
-        if (WE_PSR) begin
-            PSR_Z = ALU_Z;
-            PSR_N = ALU_N;
-            PSR_V = ALU_V;
-            PSR_C = ALU_C;
-        end
+    if (WE_PSR) begin
+        PSR_Z = ALU_Z;
+        PSR_N = ALU_N;
+        PSR_V = ALU_V;
+        PSR_C = ALU_C;
     end
+end
+
 endmodule
 
 module MUX_ALU_CALL(
