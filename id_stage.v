@@ -328,6 +328,7 @@ module CU_ID(
     output reg [63:0] keyword,
     output reg       ID_JUMPL_out,
     output reg       ID_BRANCH_out
+    output reg       ID_SE_out
 
 );
 
@@ -358,6 +359,7 @@ module CU_ID(
         ID_JUMPL_out    = 1'b0;
         ID_BRANCH_out   = 1'b0;
         keyword         = "UNKNOWN ";
+        ID_SE_out       = 1'b0;            // unsigned por defecto
 
         // ==========================
         // NOP = instrucciòn 0
@@ -618,6 +620,7 @@ module CU_ID(
                             ID_LOAD_out  = 1'b1;
                             ID_RF_LE_out = 1'b1;
                             ID_SIZE_out  = 2'b10;
+                            ID_SE_out    = 1'b0;        // word: da igual, lo dejamos unsigned
                             keyword      = "LD      ";
                         end
 
@@ -626,6 +629,7 @@ module CU_ID(
                             ID_LOAD_out  = 1'b1;
                             ID_RF_LE_out = 1'b1;
                             ID_SIZE_out  = 2'b00;
+                            ID_SE_out    = 1'b0;        // unsigned byte
                             keyword      = "LDUB    ";
                         end
 
@@ -634,6 +638,7 @@ module CU_ID(
                             ID_LOAD_out  = 1'b1;
                             ID_RF_LE_out = 1'b1;
                             ID_SIZE_out  = 2'b01;
+                            ID_SE_out    = 1'b0;        // unsigned halfword
                             keyword      = "LDUH    ";
                         end
 
@@ -642,6 +647,7 @@ module CU_ID(
                             ID_LOAD_out  = 1'b1;
                             ID_RF_LE_out = 1'b1;
                             ID_SIZE_out  = 2'b10; 
+                            ID_SE_out    = 1'b0;        // sin sign-extend especial
                             keyword      = "LDD     ";
                         end
 
@@ -650,6 +656,7 @@ module CU_ID(
                             ID_LOAD_out  = 1'b1;
                             ID_RF_LE_out = 1'b1;
                             ID_SIZE_out  = 2'b00;
+                            ID_SE_out    = 1'b1;        // <<< SIGNED BYTE
                             keyword      = "LDSB    ";
                         end
 
@@ -658,6 +665,7 @@ module CU_ID(
                             ID_LOAD_out  = 1'b1;
                             ID_RF_LE_out = 1'b1;
                             ID_SIZE_out  = 2'b01;
+                            ID_SE_out    = 1'b1;        // <<< SIGNED HALFWORD
                             keyword      = "LDSH    ";
                         end
 
@@ -665,6 +673,7 @@ module CU_ID(
                         6'b000100: begin
                             ID_RW_DM_out = 1'b1;
                             ID_SIZE_out  = 2'b10;
+                            ID_SE_out    = 1'b0;        // SE no importa en store
                             keyword      = "ST      ";
                         end
 
@@ -672,6 +681,7 @@ module CU_ID(
                         6'b000101: begin
                             ID_RW_DM_out = 1'b1;
                             ID_SIZE_out  = 2'b00;
+                            ID_SE_out    = 1'b0;
                             keyword      = "STB     ";
                             ID_LOAD_out = 0;
                             ID_RF_LE_out = 0; 
@@ -682,13 +692,15 @@ module CU_ID(
                         6'b000110: begin
                             ID_RW_DM_out = 1'b1;
                             ID_SIZE_out  = 2'b01;
+                            ID_SE_out    = 1'b0;
                             keyword      = "STH";
                         end
 
                         // ------ STD (store double) ------
                         6'b000111: begin
                             ID_RW_DM_out = 1'b1;
-                            ID_SIZE_out  = 2'b10; // mismo control b√°sico
+                            ID_SIZE_out  = 2'b10;       // mismo control b√°sico
+                            ID_SE_out    = 1'b0;
                             keyword      = "STD";
                             ID_LOAD_out = 0;
                             ID_RF_LE_out = 0; 
@@ -699,6 +711,7 @@ module CU_ID(
                             ID_LOAD_out  = 1'b1;
                             ID_RF_LE_out = 1'b1;
                             ID_SIZE_out  = 2'b00;
+                            ID_SE_out    = 1'b0;        // unsigned byte
                             keyword      = "LDSTUB";
                         end
 
@@ -707,6 +720,7 @@ module CU_ID(
                             ID_LOAD_out  = 1'b1;
                             ID_RF_LE_out = 1'b1;
                             ID_SIZE_out  = 2'b10;
+                            ID_SE_out    = 1'b0;        // word
                             keyword      = "SWAP";
                         end
 
@@ -742,6 +756,7 @@ module MUX_ID_STALL(
     input        ID_MUX_RW_DM_in,
     input        ID_MUX_BRANCH_in,
     input        ID_MUX_JUMPL_in,
+    input        ID_MUX_SE_in,
 
     // ======= Outputs hacia ID/EX =======
     output [3:0] ID_MUX_ALU_OP_out,
@@ -755,7 +770,8 @@ module MUX_ID_STALL(
     output [1:0] ID_MUX_SIZE_out,
     output        ID_MUX_RW_DM_out,
     output        ID_MUX_BRANCH_out,
-    output        ID_MUX_JUMPL_out
+    output        ID_MUX_JUMPL_out,
+    output        ID_MUX_SE_out
 );
 
     // ===============================
@@ -773,6 +789,8 @@ module MUX_ID_STALL(
     assign ID_MUX_RW_DM_out   = (ID_MUX_sel) ? 1'b0     : ID_MUX_RW_DM_in;
     assign ID_MUX_BRANCH_out  = (ID_MUX_sel) ? 1'b0     : ID_MUX_BRANCH_in;
     assign ID_MUX_JUMPL_out   = (ID_MUX_sel) ? 1'b0     : ID_MUX_JUMPL_in;
+    assign ID_MUX_SE_out      = (ID_MUX_sel) ? 1'b0     : ID_MUX_SE_in;
+
 
 endmodule
 
@@ -794,6 +812,7 @@ module Registro_ID_EX(
     input        ID_E_in,
     input  [1:0] ID_SIZE_in,
     input        ID_RW_DM_in,
+    input        ID_SE_in,
     input [31:0] DF_A, DF_B, DF_C,  
     input [1:0]  EX_PC_SEL_in,
     input [4:0]  rd_in,
@@ -811,6 +830,7 @@ module Registro_ID_EX(
     output reg       EX_E_out,
     output reg [1:0] EX_SIZE_out,
     output reg       EX_RW_DM_out,
+    output reg       EX_SE_out,
     output reg [31:0] A_out, B_out, C_out,
     output reg [4:0] rd_out,
     output reg [1:0] EX_PC_SEL_out,
@@ -831,6 +851,7 @@ module Registro_ID_EX(
             EX_E_out       <= 1'b0;
             EX_SIZE_out    <= 2'b00;
             EX_RW_DM_out   <= 1'b0;
+            EX_SE_out      <= 1'b0;
             A_out          <= 32'b0;
             B_out          <= 32'b0;
             C_out          <= 32'b0;
@@ -851,6 +872,7 @@ module Registro_ID_EX(
             EX_E_out       <= ID_E_in;
             EX_SIZE_out    <= ID_SIZE_in;
             EX_RW_DM_out   <= ID_RW_DM_in;
+            EX_SE_out      <= ID_SE_in;
             A_out          <= DF_A;
             B_out          <= DF_B;
             C_out          <= DF_C;
