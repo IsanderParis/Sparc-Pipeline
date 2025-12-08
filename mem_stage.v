@@ -33,13 +33,6 @@ module Data_Memory (
 
     wire [8:0] A = A_in;
 
-    integer i;
-
-    initial begin
-        for (i = 0; i < 512; i = i + 1)
-            mem[i] = 8'h00;   // inicializa TODA la memoria a 0
-    end
-
     // ============================
     //  READ: combinational
     // ============================
