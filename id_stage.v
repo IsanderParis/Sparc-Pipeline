@@ -327,7 +327,7 @@ module CU_ID(
     output reg       ID_RW_DM_out,
     output reg [63:0] keyword,
     output reg       ID_JUMPL_out,
-    output reg       ID_BRANCH_out
+    output reg       ID_BRANCH_out,
     output reg       ID_SE_out
 
 );
