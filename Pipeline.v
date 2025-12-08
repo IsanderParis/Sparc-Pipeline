@@ -38,6 +38,8 @@ wire CU_E_WIRE;
 wire CU_RW_WIRE;
 wire [1:0] CU_MEM_SIZE_WIRE;
 wire [63:0] CU_Instruction_keyword_wire;
+wire CU_SE_WIRE;        // SE generado por CU_ID
+
 
 // ID MUX NOP STALL
 wire [3:0] STALL_ALU_OP_WIRE, STALL_SOH_OP_WIRE;
@@ -51,6 +53,8 @@ wire STALL_WE_PSR_WIRE;
 wire STALL_E_WIRE;
 wire STALL_RW_WIRE;
 wire [1:0] STALL_MEM_SIZE_WIRE;
+wire STALL_SE_WIRE;     // SE después del MUX_ID_STALL
+
 
 
 //ID Data Fowarding MUXes
@@ -160,6 +164,7 @@ wire EX_RW_DM_WIRE;
 wire EX_E_WIRE;
 wire EX_LOAD_WIRE;
 wire [1:0] EX_MEM_SIZE_WIRE;
+wire EX_SE_WIRE;                // desde ID/EX hacia EX
 
 //dhdu
 wire NOP_STALL_WIRE, DHDU_LE_WIRE;
@@ -174,6 +179,7 @@ wire MEM_RW_WIRE;
 wire MEM_E_WIRE; 
 wire MEM_LOAD_WIRE; 
 wire MEM_RF_LE_WIRE;
+wire MEM_SE_WIRE;               // desde EX/MEM hacia MEM
 wire [4:0] MEM_RD_WIRE;
 wire [31:0] MEM_ALU_OUT_WIRE, MEM_DM_OUT_WIRE, MEM_MUX_OUT_WIRE; 
 wire [8:0] DM_A;
@@ -290,7 +296,8 @@ CU_ID CU_ID_0 (
     .ID_E_out(CU_E_WIRE),
     .ID_RW_DM_out(CU_RW_WIRE),
     .ID_SIZE_out(CU_MEM_SIZE_WIRE),
-    .keyword(CU_Instruction_keyword_wire)
+    .keyword(CU_Instruction_keyword_wire),
+    .ID_SE_out(CU_SE_WIRE)
 );
 
 MUX_DF_PA MUX_DF_A(
@@ -336,6 +343,7 @@ MUX_ID_STALL MUX_ID_STALL_0 (
     .ID_MUX_RW_DM_in(CU_RW_WIRE),
     .ID_MUX_SIZE_in(CU_MEM_SIZE_WIRE),
     .ID_MUX_a_in(CU_a),
+    .ID_MUX_SE_in(CU_SE_WIRE),
     
     //out 
     .ID_MUX_ALU_OP_out(STALL_ALU_OP_WIRE),
@@ -349,7 +357,8 @@ MUX_ID_STALL MUX_ID_STALL_0 (
     .ID_MUX_E_out(STALL_E_WIRE),
     .ID_MUX_SIZE_out(STALL_MEM_SIZE_WIRE),
     .ID_MUX_RW_DM_out(STALL_RW_WIRE),
-    .ID_MUX_JUMPL_out(STALL_JUMPL_WIRE)
+    .ID_MUX_JUMPL_out(STALL_JUMPL_WIRE),
+    .ID_MUX_SE_out(STALL_SE_WIRE)
 
 
 );
@@ -368,6 +377,7 @@ Registro_ID_EX REG_ID_EX_0 (
     .ID_E_in(STALL_E_WIRE),
     .ID_SIZE_in(STALL_MEM_SIZE_WIRE),
     .ID_RW_DM_in(STALL_RW_WIRE),
+    .ID_SE_in(STALL_SE_WIRE),
 
     // operandos
     .DF_A(DF_A_OUT_WIRE),
@@ -395,6 +405,7 @@ Registro_ID_EX REG_ID_EX_0 (
     .EX_E_out(EX_E_WIRE),
     .EX_SIZE_out(EX_MEM_SIZE_WIRE),
     .EX_RW_DM_out(EX_RW_DM_WIRE),
+    .EX_SE_out(EX_SE_WIRE),
     .A_out(EX_ALU_A_WIRE),
     .B_out(EX_SOH_R_WIRE),
     .C_out(EX_PC_D_WIRE),
@@ -527,6 +538,7 @@ Registro_EX_MEM REG_EX_MEM_0(
     .E_ex(EX_E_WIRE),
     .size_ex(EX_MEM_SIZE_WIRE),
     .rw_dm_ex(EX_RW_DM_WIRE),
+    .se_ex(EX_SE_WIRE),
     .alu_out_ex(EX_MUX_ALU_CALL),
 
     .ex_rd(EX_RD_WIRE),
@@ -538,6 +550,7 @@ Registro_EX_MEM REG_EX_MEM_0(
     .E_mem(MEM_E_WIRE),
     .size_mem(MEM_SIZE_WIRE),
     .rw_dm_mem(MEM_RW_WIRE),
+    .se_mem(MEM_SE_WIRE),
     .alu_out_mem(MEM_ALU_OUT_WIRE),
     .mem_rd(MEM_RD_WIRE),
     .PC_D_mem(MEM_DI_WIRE)
@@ -552,6 +565,7 @@ Registro_EX_MEM REG_EX_MEM_0(
     .Size(MEM_SIZE_WIRE),
     .RW(MEM_RW_WIRE),
     .E(MEM_E_WIRE),
+    .SE(MEM_SE_WIRE),
 
     //out
     .DO(MEM_DM_OUT_WIRE)
