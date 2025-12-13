@@ -1,22 +1,19 @@
 
 module Target_Address_Generator (
     input  [31:0] PC,
-    input  [29:0] OFFSET,   // offset ya procesado en ID
-    input         isCALL,
-    input         isBRANCH,
-    output reg [31:0] TA
+    input  [29:0] OFFSET,   
+    output [31:0] TA
 );
 
-    always @(*) begin
-        if (isCALL)
-            TA = PC + OFFSET;      // OFFSET = disp30 << 2
-        else if (isBRANCH)
-            TA = PC + OFFSET;      // OFFSET = disp22 << 2
-        else
-            TA = 32'b0;
-    end
+    // Extensión de signo de 30 → 32 bits
+    wire signed [31:0] OFFSET_EXT =
+        {{2{OFFSET[29]}}, OFFSET};
+
+    assign TA = PC + OFFSET_EXT;
 
 endmodule
+
+
 
 
 // registro de 32 bits
@@ -817,6 +814,7 @@ module Registro_ID_EX(
     input [1:0]  EX_PC_SEL_in,
     input [4:0]  rd_in,
     input [21:0] imm22_in,
+    input [31:0] ID_TAG,
          
 
     // ======== Outputs hacia EX ========
@@ -834,7 +832,8 @@ module Registro_ID_EX(
     output reg [31:0] A_out, B_out, C_out,
     output reg [4:0] rd_out,
     output reg [1:0] EX_PC_SEL_out,
-    output reg [21:0] imm22_out
+    output reg [21:0] imm22_out,
+    output reg [31:0] EX_TAG
         
 );
 
@@ -858,6 +857,7 @@ module Registro_ID_EX(
             rd_out         <= 5'b0;
             EX_PC_SEL_out  <= 2'b00;
             imm22_out      <= 22'b0;
+            EX_TAG         <= 32'b0;
               
         end
         
@@ -879,6 +879,7 @@ module Registro_ID_EX(
             rd_out         <= rd_in;
             EX_PC_SEL_out  <= EX_PC_SEL_in;
             imm22_out      <= imm22_in;
+            EX_TAG         <= ID_TAG;
                
         end
     end

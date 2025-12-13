@@ -12,6 +12,7 @@ wire [8:0] IM_A;
 assign IM_A = IF_PC_WIRE[8:0];
 
 
+wire [31:0] NPC_WIRE;
 wire [31:0] IF_NPC_WIRE; 
 wire [31:0] IF_INSTRUCTION_WIRE;
 wire [31:0] IF_MUX_WIRE;
@@ -22,6 +23,7 @@ wire [31:0] IF_ADDER_WIRE;
 wire [31:0] ID_INSTRUCTION_WIRE; // va pal CU
 wire [31:0] ID_PC_WIRE;
 wire [31:0] ID_TAG_WIRE; //sale del TAG
+wire [31:0] EX_TAG_wire;
 wire [1:0] REG_IN_PC_SEL_WIRE;
 wire [1:0] ID_PC_SEL_WIRE;
 
@@ -96,13 +98,18 @@ assign ID_RS2_WIRE = ID_INSTRUCTION_WIRE[4:0];
 // assign ID_OFFSET_WIRE = ID_INSTRUCTION_WIRE[29:0];
 assign ID_COND_WIRE = ID_INSTRUCTION_WIRE[28:25];
 assign ID_SIMM13_WIRE = ID_INSTRUCTION_WIRE[12:0];
-assign ID_imm22 = {{9{ID_SIMM13_WIRE[12]}}, ID_SIMM13_WIRE};
+// assign ID_imm22 = {{9{ID_SIMM13_WIRE[12]}}, ID_SIMM13_WIRE};
 assign CU_a = ID_INSTRUCTION_WIRE[29];
 assign ID_bit_i = ID_INSTRUCTION_WIRE[13];
 
 // Crudo de instrucción
 wire [29:0] disp30_raw = ID_INSTRUCTION_WIRE[29:0];
 wire [21:0] disp22_raw = ID_INSTRUCTION_WIRE[21:0];
+wire [21:0] simm13_extended = {{9{ID_SIMM13_WIRE[12]}}, ID_SIMM13_WIRE};
+assign ID_imm22 = ID_bit_i
+                ? simm13_extended[21:0]
+                : disp22_raw;
+
 
 // Sign-extend
 wire signed [31:0] disp30_sext = {{2{disp30_raw[29]}}, disp30_raw};
@@ -201,7 +208,6 @@ wire WB_RF_LE_WIRE;
 //Instanciasde modulos
 //==========================
 
-wire [31:0] NPC_WIRE = IF_PC_WIRE + 4;
 // IF Stage
 MUX_IF MUX_IF_0 (
     .npc_in(NPC_WIRE),
@@ -219,17 +225,18 @@ PC_IF PC_IF_0 (
     //out
     .pc_out(IF_PC_WIRE)
 );
-// Adder ADDER_0 (
-//     .mux_out(IF_PC_WIRE),         
-//     .adder_out(IF_ADDER_WIRE)
-// );
-// NPC_IF NPC_IF_0 (
-//     .clk(CLOCK),
-//     .R(RESET),
-//     .LE(DHDU_LE_WIRE),              
-//     .adder_out(IF_ADDER_WIRE),        
-//     .npc(IF_NPC_WIRE)
-// );
+Adder ADDER_0 (
+    .mux_out(IF_MUX_WIRE),         
+    .adder_out(IF_ADDER_WIRE)
+);
+NPC_IF NPC_IF_0 (
+    .clk(CLOCK),
+    .R(RESET),
+    .LE(DHDU_LE_WIRE),              
+    .adder_out(IF_ADDER_WIRE),  
+    //out      
+    .npc(NPC_WIRE)
+);
 Instruction_Memory INSTRUCTION_MEMORY_0 ( // cambiarlo al otro im
     .A(IM_A),
     .I(IF_INSTRUCTION_WIRE)
@@ -250,10 +257,9 @@ Registro_IF_ID REG_IF_ID_0 (
 Target_Address_Generator TAG_ID_0 (
     // .instr(ID_INSTRUCTION_WIRE),
     .PC(ID_PC_WIRE),
-    .TA(ID_TAG_WIRE),
     .OFFSET(ID_OFFSET_WIRE),
-    .isBRANCH(STALL_BRANCH_WIRE),
-    .isCALL(STALL_CALL_WIRE)
+    
+    .TA(ID_TAG_WIRE)
 );
 
 Register_File RF_ID_0 (
@@ -378,6 +384,8 @@ Registro_ID_EX REG_ID_EX_0 (
     .ID_SIZE_in(STALL_MEM_SIZE_WIRE),
     .ID_RW_DM_in(STALL_RW_WIRE),
     .ID_SE_in(STALL_SE_WIRE),
+    .ID_TAG(ID_TAG_WIRE),
+    .EX_TAG(EX_TAG_wire),
 
     // operandos
     .DF_A(DF_A_OUT_WIRE),
@@ -390,7 +398,7 @@ Registro_ID_EX REG_ID_EX_0 (
     //pc sel retroalimentado del CH
     .EX_PC_SEL_in(EX_CH_PC_SEL),
 
-    //simm13
+    //imm22
     .imm22_in(ID_imm22),
     .imm22_out(EX_IMM22_WIRE),
 
@@ -464,7 +472,7 @@ MUX_EX_ICC MUX_EX_ICC_0(
     .PSR_N(EX_PSR_N_WIRE),
     .PSR_V(EX_PSR_V_WIRE),
     .PSR_C(EX_PSR_C_WIRE),
-
+    //out
     .CH_Z(EX_CH_Z_WIRE),
     .CH_N(EX_CH_N_WIRE),
     .CH_V(EX_CH_V_WIRE),
@@ -481,7 +489,6 @@ Data_Hazard_Detection_Unit DHDU_0(
     .EX_RD(EX_RD_WIRE),
     .MEM_RD(MEM_RD_WIRE),
     .WB_RD(WB_RD_WIRE),
-    .EX_LOAD(EX_LOAD_WIRE),
     .EX_RF_LE(EX_RF_LE_WIRE),
     .MEM_RF_LE(MEM_RF_LE_WIRE),
     .WB_RF_LE(WB_RF_LE_WIRE),
@@ -733,7 +740,7 @@ endmodule
 
 //     initial begin
 //        #160 begin
-//         $display("Word at address 44: %b %b %b %b",
+//         $display("Word at address 44 at T=160: %b %b %b %b",
 //             pipeline.DM_0.mem[44],
 //             pipeline.DM_0.mem[45],
 //             pipeline.DM_0.mem[46],
@@ -749,6 +756,13 @@ endmodule
 //                 pipeline.RF_ID_0.q2,
 //                 pipeline.RF_ID_0.q3,
 //                 pipeline.RF_ID_0.q5);
+
+//             // $display("Word at address 44: %b %b %b %b",
+//             //     pipeline.DM_0.mem[44],
+//             //     pipeline.DM_0.mem[45],
+//             //     pipeline.DM_0.mem[46],
+//             //     pipeline.DM_0.mem[47]
+//             // );
 //     end
 
 // endmodule
@@ -879,10 +893,10 @@ endmodule
 //     $display("=== Cargando debugging_code_SPARC.txt ===");
 
 //     //leer debugging code
-//     $readmemb("test/debugging_code_SPARC.txt", instr_bytes);
+//     // $readmemb("test/debugging_code_SPARC.txt", instr_bytes);
 
 //     //leer testcode1
-//     // $readmemb("test/testcode_sparc1.txt", instr_words);
+//     $readmemb("test/testcode_sparc1.txt", instr_bytes);
 
 //     //leer testcode2 (56)
 //     // $readmemb("test/testcode_sparc2.txt", instr_words);
@@ -933,11 +947,12 @@ endmodule
 //                  pipeline.NPC_WIRE,
 //                  pipeline.IF_INSTRUCTION_WIRE);
         
-//             $display("IF_MUX | EX_PC_SEL = %b  TA = %b  ALU_OUT = %b  NPC = %b",
+//             $display("IF_MUX | EX_PC_SEL in = %b  TA = %b  ALU_OUT = %b  NPC = %b mux_out=%0d",
 //                     pipeline.EX_CH_PC_SEL,
 //                     pipeline.ID_TAG_WIRE,
 //                     pipeline.EX_ALU_OUT_WIRE,
-//                     pipeline.NPC_WIRE);
+//                     pipeline.NPC_WIRE, 
+//                     pipeline.IF_MUX_WIRE);
 //             $display("IF_IM | addres_in=%b instrucion_out=%b",
 //                     pipeline.IM_A,
 //                     pipeline.IF_INSTRUCTION_WIRE);
@@ -1059,10 +1074,12 @@ endmodule
 //             pipeline.EX_SOH_R_WIRE,
 //             pipeline.EX_PC_D_WIRE,
 //             pipeline.PC_SEL_WIRE,
-//             pipeline.EX_SE_WIRE
+//             pipeline.EX_SE_WIRE,
+//             pipeline.EX_TAG_wire
 //         );
 
-//         $display("DHDU | ID_RS1=%0d ID_RS2=%0d EX_RD=%0d MEM_RD=%0d WB_RD=%0d | EX_RF_LE=%b MEM_RF_LE=%b WB_RF_LE=%b | SEL_A=%b SEL_B=%b",
+//         $display("DHDU | IF_LE =%b ID_RS1=%0d ID_RS2=%0d EX_RD=%0d MEM_RD=%0d WB_RD=%0d | EX_RF_LE=%b MEM_RF_LE=%b WB_RF_LE=%b | SEL_A=%b SEL_B=%b",
+//             pipeline.DHDU_LE_WIRE,
 //             pipeline.ID_RS1_WIRE,
 //             pipeline.ID_RS2_WIRE,
 //             pipeline.EX_RD_WIRE,
@@ -1088,7 +1105,6 @@ endmodule
 
 //         $display("PSR_in: EX_WE_IN=%b ALU_Z=%b ALU_N=%b ALU_V=%b ALU_C=%b ",
 //                 pipeline.EX_WE_PSR_WIRE,
-//                 pipeline.EX_ALU_Z_WIRE,
 //                 pipeline.EX_ALU_Z_WIRE,
 //                 pipeline.EX_ALU_N_WIRE,
 //                 pipeline.EX_ALU_V_WIRE,
@@ -1178,17 +1194,18 @@ endmodule
 //         );
 
 //             // // REGISTER FILE STATE oara debug
-//             $display("RF-after wb | r5=%0d r6=%0d r16=%0d r17=%0d r18=%0d",
-//                      pipeline.RF_ID_0.q5,
-//                      $signed(pipeline.RF_ID_0.q6),
-//                      pipeline.RF_ID_0.q16,
-//                      $signed(pipeline.RF_ID_0.q17),
-//                      $signed(pipeline.RF_ID_0.q18)
-//                      );
+//             $display("\n");
+//             $display("registros---------------------------------------------------------");
+//            $display("PC=%0d | r5=%0d r6=%0d r16=%0d r17=%0d r18=%0d",
+//                 pipeline.IF_PC_WIRE,
+//                 pipeline.RF_ID_0.q5,
+//                 pipeline.RF_ID_0.q6,
+//                 pipeline.RF_ID_0.q16,
+//                 pipeline.RF_ID_0.q17,
+//                 pipeline.RF_ID_0.q18);
+            
 
 // //             //register file para testcode1
-// //             $display("\n");
-// //             $display("registros---------------------------------------------------------");
 // //             $display("RF | r0=%0d r1=%0d r2=%0d r3=%0d r4=%0d r5=%0d r6=%0d r7=%0d",
 // //                 pipeline.RF_ID_0.registers[0],
 // //                 pipeline.RF_ID_0.registers[1],

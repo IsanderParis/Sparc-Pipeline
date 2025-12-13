@@ -35,7 +35,10 @@ module NPC_IF(
     input        R,             // Reset
     input  [31:0] adder_out,      // entrada desde MUX_IF
     output reg [31:0] npc       // salida = siguiente PC
+
 );
+
+
     always @(posedge clk) begin
         if (R)
             npc <= 4;
@@ -61,18 +64,6 @@ module PC_IF(
     end
 endmodule
 
-// =========================
-// no es correcta
-// module Instruction_Memory(
-//   input  [31:0] pc_out,
-//   output [31:0] instruction
-// );
-//   reg [31:0] Mem [0:511];   
-
-//   assign instruction = Mem[pc_out >> 2];
-// endmodule
-
-// este es el que se uso en fase 1
 module Instruction_Memory (
   input  [8:0]  A,     // 0..511
   output [31:0] I
