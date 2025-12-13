@@ -85,17 +85,20 @@ module Registro_IF_ID(
     input        clk,                 // reloj
     input        R,                   // reset
     input        LE,
-    input CH_clear,
+    input        CH_clear,
     input  [31:0] pc_in,              // entrada desde PC_IF
     input  [31:0] instruction_in,        // entrada desde Instruction Memory
     output reg [31:0] instruction_out, // salida hacia la etapa ID
     output reg [31:0] pc_out         // salida hacia la etapa ID
 );
     always @(posedge clk) begin
-        if (R || CH_clear)
-            instruction_out <= 32'b0;   // limpia en reset
-        else if (LE)
-            instruction_out <= instruction_in; // guarda la nueva instrucción
+        if (R || CH_clear) begin
+            instruction_out <= 32'b0;
+            pc_out <= 32'b0;
+        end
+        else if (LE) begin
+            instruction_out <= instruction_in;
             pc_out <= pc_in;
+        end
     end
 endmodule

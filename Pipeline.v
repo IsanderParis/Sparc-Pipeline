@@ -98,6 +98,7 @@ assign ID_RS2_WIRE = ID_INSTRUCTION_WIRE[4:0];
 // assign ID_OFFSET_WIRE = ID_INSTRUCTION_WIRE[29:0];
 assign ID_COND_WIRE = ID_INSTRUCTION_WIRE[28:25];
 assign ID_SIMM13_WIRE = ID_INSTRUCTION_WIRE[12:0];
+assign ID_imm22 = ID_INSTRUCTION_WIRE[21:0];
 // assign ID_imm22 = {{9{ID_SIMM13_WIRE[12]}}, ID_SIMM13_WIRE};
 assign CU_a = ID_INSTRUCTION_WIRE[29];
 assign ID_bit_i = ID_INSTRUCTION_WIRE[13];
@@ -136,6 +137,9 @@ wire [31:0] EX_SOH_OUT_WIRE;
 wire [31:0] EX_ALU_OUT_WIRE; 
 wire [31:0] EX_PC_D_WIRE;
 wire [21:0] EX_IMM22_WIRE;
+wire [31:0] EX_PC_FROM_IDEX;
+wire [31:0] EX_PC_RET;     // PC+8
+assign EX_PC_RET = EX_PC_FROM_IDEX + 32'd8;
 
 wire [3:0] EX_ALU_OP_WIRE, EX_SOH_IS_WIRE;
 wire [4:0] EX_RD_WIRE;
@@ -386,6 +390,7 @@ Registro_ID_EX REG_ID_EX_0 (
     .ID_SE_in(STALL_SE_WIRE),
     .ID_TAG(ID_TAG_WIRE),
     .EX_TAG(EX_TAG_wire),
+    .ID_PC_in(ID_PC_WIRE),
 
     // operandos
     .DF_A(DF_A_OUT_WIRE),
@@ -418,7 +423,8 @@ Registro_ID_EX REG_ID_EX_0 (
     .B_out(EX_SOH_R_WIRE),
     .C_out(EX_PC_D_WIRE),
     .rd_out(EX_RD_WIRE),
-    .EX_PC_SEL_out(PC_SEL_WIRE)
+    .EX_PC_SEL_out(PC_SEL_WIRE),
+    .EX_PC_out(EX_PC_FROM_IDEX)
     
 );
 
@@ -528,7 +534,7 @@ Second_Operand_Handler SOH_0(
 MUX_ALU_CALL MUX_ALU_CALL_0(
     //in
     .ALU_OUT(EX_ALU_OUT_WIRE),
-    .PC_D(EX_PC_WIRE),
+    .PC_D(EX_PC_RET),
     .EX_CALL(EX_CALL_WIRE),
 
     //out
@@ -861,7 +867,7 @@ end
                 pipeline.RF_ID_0.q10,
                 pipeline.RF_ID_0.q11,
                 pipeline.RF_ID_0.q12,
-                pipeline.RF_ID_0.q15,);
+                pipeline.RF_ID_0.q15);
     end
 
 endmodule

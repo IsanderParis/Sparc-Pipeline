@@ -815,6 +815,7 @@ module Registro_ID_EX(
     input [4:0]  rd_in,
     input [21:0] imm22_in,
     input [31:0] ID_TAG,
+    input [31:0] ID_PC_in,
          
 
     // ======== Outputs hacia EX ========
@@ -833,7 +834,8 @@ module Registro_ID_EX(
     output reg [4:0] rd_out,
     output reg [1:0] EX_PC_SEL_out,
     output reg [21:0] imm22_out,
-    output reg [31:0] EX_TAG
+    output reg [31:0] EX_TAG,
+    output reg [31:0] EX_PC_out
         
 );
 
@@ -858,6 +860,7 @@ module Registro_ID_EX(
             EX_PC_SEL_out  <= 2'b00;
             imm22_out      <= 22'b0;
             EX_TAG         <= 32'b0;
+            EX_PC_out      <= 32'b0;
               
         end
         
@@ -880,6 +883,7 @@ module Registro_ID_EX(
             EX_PC_SEL_out  <= EX_PC_SEL_in;
             imm22_out      <= imm22_in;
             EX_TAG         <= ID_TAG;
+            EX_PC_out      <= ID_PC_in;
                
         end
     end
