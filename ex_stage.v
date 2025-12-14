@@ -41,7 +41,8 @@ always @(*) begin
         // N, Z, V, C
         case (ID_COND)
             4'b0000: begin end                      // BN → nunca brincar
-            4'b0001: if (MUX_Z) begin PC_SEL=2'b01; clr_IF=1; end     // BE
+            4'b0001: if (MUX_Z) begin PC_SEL=2'b01; clr_IF=1; end     // tomado -> ir a TA, flush
+                     else if (a) begin PC_SEL=2'b00; clr_IF=1; end    // NO tomado + annul -> flush delay slot
             4'b0010: if (MUX_Z || (MUX_N ^ MUX_V)) begin PC_SEL=2'b01; clr_IF=1; end  // BLE
             4'b0011: if (MUX_N ^ MUX_V) begin PC_SEL=2'b01; clr_IF=1; end // BL
             4'b0100: if (MUX_C || MUX_Z) begin PC_SEL=2'b01; clr_IF=1; end // BLEU
