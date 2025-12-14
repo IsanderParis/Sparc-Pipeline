@@ -1,19 +1,23 @@
 
 module MUX_MEM_OUT(
-    input [31:0] ALU_OUT,
-    input [31:0] MEM_OUT,
-    input MEM_LOAD,
+    input  [31:0] ALU_OUT,
+    input  [31:0] MEM_OUT,
+    input  [31:0] sethi_imm22,
+    input  [1:0]  MEM_LOAD,
     output reg [31:0] MUX_OUT
 );
+
     always @(*) begin
-        if (MEM_LOAD) begin
-            MUX_OUT = MEM_OUT;
-        end else begin
-            MUX_OUT = ALU_OUT;
-        end
+        case (MEM_LOAD)
+            2'b00: MUX_OUT = ALU_OUT;        // Operaciones aritméticas
+            2'b01: MUX_OUT = MEM_OUT;        // Load
+            2'b10: MUX_OUT = sethi_imm22;    // SETHI
+            default: MUX_OUT = ALU_OUT;      // Safe default
+        endcase
     end
 
 endmodule
+
 
 module Data_Memory (
     input         clk,

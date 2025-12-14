@@ -23,6 +23,10 @@ module reg32 (
     input  wire [31:0] D,
     output reg  [31:0] Q
 );
+
+    initial begin
+        Q = 32'd0;
+    end
     always @(posedge clk) begin
         if (ld)
             Q <= D;
@@ -314,7 +318,7 @@ module CU_ID(
 
     output reg [3:0] ID_ALU_OP_out,
     output reg [3:0] ID_SOH_OP_out,
-    output reg       ID_LOAD_out,
+    output reg [1:0] ID_LOAD_out,
     output reg       ID_a_out,
     output reg       ID_RF_LE_out,
     output reg       ID_CALL_out,
@@ -345,7 +349,7 @@ module CU_ID(
         // ==========================
         ID_ALU_OP_out   = 4'b0000;
         ID_SOH_OP_out   = 4'b0000;
-        ID_LOAD_out     = 1'b0;
+        ID_LOAD_out     = 2'b00;
         ID_a_out        = 1'b0;
         ID_RF_LE_out    = 1'b0;
         ID_CALL_out     = 1'b0;
@@ -383,7 +387,8 @@ module CU_ID(
                         // -------- SETHI -------- (op2 = 100)
                         3'b100: begin
                             ID_RF_LE_out  = 1'b1;
-                            ID_SOH_OP_out = 4'b0000;   
+                            ID_SOH_OP_out = 4'b0000;  
+                            ID_LOAD_out = 2'b10; 
                             keyword       = "SETHI   ";
                         end
 
@@ -614,7 +619,7 @@ module CU_ID(
 
                         // ------ LD (word) ------
                         6'b000000: begin
-                            ID_LOAD_out  = 1'b1;
+                            ID_LOAD_out  = 2'b01;
                             ID_RF_LE_out = 1'b1;
                             ID_SIZE_out  = 2'b10;
                             ID_SE_out    = 1'b0;        // word: da igual, lo dejamos unsigned
@@ -623,7 +628,7 @@ module CU_ID(
 
                         // ------ LDUB ------
                         6'b000001: begin
-                            ID_LOAD_out  = 1'b1;
+                            ID_LOAD_out  = 2'b01;
                             ID_RF_LE_out = 1'b1;
                             ID_SIZE_out  = 2'b00;
                             ID_SE_out    = 1'b0;        // unsigned byte
@@ -632,7 +637,7 @@ module CU_ID(
 
                         // ------ LDUH ------
                         6'b000010: begin
-                            ID_LOAD_out  = 1'b1;
+                            ID_LOAD_out  = 2'b01;
                             ID_RF_LE_out = 1'b1;
                             ID_SIZE_out  = 2'b01;
                             ID_SE_out    = 1'b0;        // unsigned halfword
@@ -641,7 +646,7 @@ module CU_ID(
 
                         // ------ LDD (double) ------
                         6'b000011: begin
-                            ID_LOAD_out  = 1'b1;
+                            ID_LOAD_out  = 2'b01;
                             ID_RF_LE_out = 1'b1;
                             ID_SIZE_out  = 2'b10; 
                             ID_SE_out    = 1'b0;        // sin sign-extend especial
@@ -650,7 +655,7 @@ module CU_ID(
 
                         // ------ LDSB (signed byte) ------
                         6'b001001: begin
-                            ID_LOAD_out  = 1'b1;
+                            ID_LOAD_out  = 2'b01;
                             ID_RF_LE_out = 1'b1;
                             ID_SIZE_out  = 2'b00;
                             ID_SE_out    = 1'b1;        // <<< SIGNED BYTE
@@ -659,7 +664,7 @@ module CU_ID(
 
                         // ------ LDSH (signed halfword) ------
                         6'b001010: begin
-                            ID_LOAD_out  = 1'b1;
+                            ID_LOAD_out  = 2'b01;
                             ID_RF_LE_out = 1'b1;
                             ID_SIZE_out  = 2'b01;
                             ID_SE_out    = 1'b1;        // <<< SIGNED HALFWORD
@@ -680,7 +685,7 @@ module CU_ID(
                             ID_SIZE_out  = 2'b00;
                             ID_SE_out    = 1'b0;
                             keyword      = "STB     ";
-                            ID_LOAD_out = 0;
+                            ID_LOAD_out = 2'b00;
                             ID_RF_LE_out = 0; 
 
                         end
@@ -699,13 +704,13 @@ module CU_ID(
                             ID_SIZE_out  = 2'b10;       // mismo control b√°sico
                             ID_SE_out    = 1'b0;
                             keyword      = "STD";
-                            ID_LOAD_out = 0;
+                            ID_LOAD_out = 2'b00;
                             ID_RF_LE_out = 0; 
                         end
 
                         // ------ LDSTUB (atomic, aqu√≠ como LDUB b√°sica) ------
                         6'b001101: begin
-                            ID_LOAD_out  = 1'b1;
+                            ID_LOAD_out  = 2'b01;
                             ID_RF_LE_out = 1'b1;
                             ID_SIZE_out  = 2'b00;
                             ID_SE_out    = 1'b0;        // unsigned byte
@@ -714,7 +719,7 @@ module CU_ID(
 
                         // ------ SWAP (aqu√≠ la tratamos como LD word) ------
                         6'b001111: begin
-                            ID_LOAD_out  = 1'b1;
+                            ID_LOAD_out  = 2'b01;
                             ID_RF_LE_out = 1'b1;
                             ID_SIZE_out  = 2'b10;
                             ID_SE_out    = 1'b0;        // word
@@ -729,7 +734,7 @@ module CU_ID(
 
                 default: begin
                     keyword = "UNKNOWN";
-                    ID_LOAD_out = 1'b0;
+                    ID_LOAD_out = 2'b00;
                 end
             endcase
         end
@@ -743,7 +748,7 @@ module MUX_ID_STALL(
     // ======= Inputs desde CU =======
     input  [3:0] ID_MUX_ALU_OP_in,
     input  [3:0] ID_MUX_SOH_OP_in,
-    input        ID_MUX_LOAD_in,
+    input  [1:0] ID_MUX_LOAD_in,
     input        ID_MUX_a_in,
     input        ID_MUX_RF_LE_in,
     input        ID_MUX_CALL_in,
@@ -758,7 +763,7 @@ module MUX_ID_STALL(
     // ======= Outputs hacia ID/EX =======
     output [3:0] ID_MUX_ALU_OP_out,
     output [3:0] ID_MUX_SOH_OP_out,
-    output        ID_MUX_LOAD_out,
+    output [1:0] ID_MUX_LOAD_out,
     output        ID_MUX_a_out,
     output        ID_MUX_RF_LE_out,
     output        ID_MUX_CALL_out,
@@ -776,7 +781,7 @@ module MUX_ID_STALL(
     // ===============================
     assign ID_MUX_ALU_OP_out  = (ID_MUX_sel) ? 4'b0000 : ID_MUX_ALU_OP_in;
     assign ID_MUX_SOH_OP_out  = (ID_MUX_sel) ? 4'b0000 : ID_MUX_SOH_OP_in;
-    assign ID_MUX_LOAD_out    = (ID_MUX_sel) ? 1'b0     : ID_MUX_LOAD_in;
+    assign ID_MUX_LOAD_out    = (ID_MUX_sel) ? 2'b00     : ID_MUX_LOAD_in;
     assign ID_MUX_a_out       = (ID_MUX_sel) ? 1'b0     : ID_MUX_a_in;
     assign ID_MUX_RF_LE_out   = (ID_MUX_sel) ? 1'b0     : ID_MUX_RF_LE_in;
     assign ID_MUX_CALL_out    = (ID_MUX_sel) ? 1'b0     : ID_MUX_CALL_in;
@@ -801,7 +806,7 @@ module Registro_ID_EX(
     // ======== Inputs desde ID ========
     input  [3:0] ID_ALU_OP_in,
     input  [3:0] ID_SOH_OP_in,
-    input        ID_LOAD_in,
+    input  [1:0] ID_LOAD_in,
     input        ID_a_in,
     input        ID_RF_LE_in,
     input        ID_CALL_in,
@@ -815,12 +820,13 @@ module Registro_ID_EX(
     input [4:0]  rd_in,
     input [21:0] imm22_in,
     input [31:0] ID_TAG,
+    input[21:0] id_sethi_imm,
          
 
     // ======== Outputs hacia EX ========
     output reg [3:0] EX_ALU_OP_out,
     output reg [3:0] EX_SOH_OP_out,
-    output reg       EX_LOAD_out,
+    output reg [1:0] EX_LOAD_out,
     output reg       EX_a_out,
     output reg       EX_RF_LE_out,
     output reg       EX_CALL_out,
@@ -833,7 +839,8 @@ module Registro_ID_EX(
     output reg [4:0] rd_out,
     output reg [1:0] EX_PC_SEL_out,
     output reg [21:0] imm22_out,
-    output reg [31:0] EX_TAG
+    output reg [31:0] EX_TAG,
+    output reg [21:0] ex_imm_sethi
         
 );
 
@@ -842,7 +849,7 @@ module Registro_ID_EX(
             // ===== Reset =====
             EX_ALU_OP_out  <= 4'b0000;
             EX_SOH_OP_out  <= 4'b0000;
-            EX_LOAD_out    <= 1'b0;
+            EX_LOAD_out    <= 2'b00;
             EX_a_out       <= 1'b0;
             EX_RF_LE_out   <= 1'b0;
             EX_CALL_out    <= 1'b0;
@@ -858,6 +865,7 @@ module Registro_ID_EX(
             EX_PC_SEL_out  <= 2'b00;
             imm22_out      <= 22'b0;
             EX_TAG         <= 32'b0;
+            ex_imm_sethi <= 22'b0;
               
         end
         
@@ -880,6 +888,7 @@ module Registro_ID_EX(
             EX_PC_SEL_out  <= EX_PC_SEL_in;
             imm22_out      <= imm22_in;
             EX_TAG         <= ID_TAG;
+            ex_imm_sethi <= id_sethi_imm;
                
         end
     end

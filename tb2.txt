@@ -1,0 +1,589 @@
+Limpiando Instruction y Data Memory..
+=== Cargando testcode2_SPARC.txt ===
+WARNING: Pipeline.v:809: $readmemb(test/testcode_sparc2.txt): Not enough words in the file for the requested range [0:511].
+IM[0] = 10000010
+IM[1] = 00010000
+IM[2] = 00100000
+IM[3] = 00100010
+IM[4] = 10001000
+IM[5] = 00010000
+IM[6] = 00100000
+IM[7] = 11011100
+IM[8] = 10010100
+IM[9] = 00010000
+IM[10] = 00000000
+IM[11] = 00000100
+IM[12] = 11000110
+IM[13] = 00000000
+IM[14] = 00000000
+IM[15] = 00001010
+IM[16] = 10010100
+IM[17] = 00000010
+IM[18] = 10100000
+IM[19] = 00000100
+IM[20] = 10000100
+IM[21] = 00000000
+IM[22] = 11000000
+IM[23] = 00000001
+IM[24] = 10001010
+IM[25] = 00010000
+IM[26] = 00000000
+IM[27] = 00000010
+IM[28] = 11001010
+IM[29] = 00100000
+IM[30] = 00000000
+IM[31] = 00001010
+IM[32] = 10010100
+IM[33] = 00000010
+IM[34] = 10100000
+IM[35] = 00000100
+IM[36] = 10001010
+IM[37] = 00100000
+IM[38] = 01000000
+IM[39] = 00000010
+IM[40] = 11001010
+IM[41] = 00100000
+IM[42] = 00000000
+IM[43] = 00001010
+IM[44] = 10010100
+IM[45] = 00000010
+IM[46] = 10100000
+IM[47] = 00000100
+IM[48] = 00001011
+IM[49] = 00001111
+IM[50] = 00001111
+IM[51] = 00000110
+IM[52] = 11001010
+IM[53] = 00100000
+IM[54] = 00000000
+IM[55] = 00001010
+IM[56] = 10010100
+IM[57] = 00000010
+IM[58] = 10100000
+IM[59] = 00000100
+IM[60] = 10001011
+IM[61] = 00111000
+IM[62] = 11100000
+IM[63] = 00000011
+IM[64] = 11001010
+IM[65] = 00100000
+IM[66] = 00000000
+IM[67] = 00001010
+IM[68] = 10010100
+IM[69] = 00000010
+IM[70] = 10100000
+IM[71] = 00000100
+IM[72] = 10001011
+IM[73] = 00101000
+IM[74] = 11100000
+IM[75] = 00000011
+IM[76] = 11001010
+IM[77] = 00100000
+IM[78] = 00000000
+IM[79] = 00001010
+IM[80] = 10010100
+IM[81] = 00000010
+IM[82] = 10100000
+IM[83] = 00000100
+IM[84] = 10001011
+IM[85] = 00110000
+IM[86] = 11100000
+IM[87] = 00000011
+IM[88] = 11001010
+IM[89] = 00100000
+IM[90] = 00000000
+IM[91] = 00001010
+IM[92] = 10010100
+IM[93] = 00000010
+IM[94] = 10100000
+IM[95] = 00000100
+IM[96] = 01000000
+IM[97] = 00000000
+IM[98] = 00000000
+IM[99] = 00000100
+IM[100] = 10010000
+IM[101] = 00010000
+IM[102] = 00100000
+IM[103] = 00100100
+IM[104] = 10000000
+IM[105] = 00000000
+IM[106] = 00000000
+IM[107] = 00000000
+IM[108] = 10000000
+IM[109] = 00000000
+IM[110] = 00000000
+IM[111] = 00000000
+IM[112] = 10011110
+IM[113] = 00000010
+IM[114] = 00000000
+IM[115] = 00001111
+IM[116] = 11011110
+IM[117] = 00100000
+IM[118] = 00000000
+IM[119] = 00001010
+IM[120] = 10000001
+IM[121] = 11000000
+IM[122] = 00000000
+IM[123] = 00001111
+IM[124] = 10010100
+IM[125] = 00000010
+IM[126] = 10100000
+IM[127] = 00000100
+IM[128] = 10000000
+IM[129] = 00000000
+IM[130] = 00000000
+IM[131] = 00000000
+IM[132] = 11011000
+IM[133] = 00000001
+IM[134] = 00111111
+IM[135] = 11111100
+IM[136] = 11010110
+IM[137] = 00000001
+IM[138] = 00111111
+IM[139] = 11111000
+IM[140] = 10000000
+IM[141] = 10000011
+IM[142] = 00000000
+IM[143] = 00001011
+IM[144] = 00001110
+IM[145] = 10000000
+IM[146] = 00000000
+IM[147] = 00000011
+IM[148] = 10000000
+IM[149] = 00000000
+IM[150] = 00000000
+IM[151] = 00000000
+IM[152] = 10001010
+IM[153] = 00001000
+IM[154] = 01000000
+IM[155] = 00000000
+IM[156] = 11001010
+IM[157] = 00100000
+IM[158] = 00000000
+IM[159] = 00001010
+IM[160] = 10010100
+IM[161] = 00000010
+IM[162] = 10100000
+IM[163] = 00000100
+IM[164] = 10001010
+IM[165] = 00000000
+IM[166] = 01000000
+IM[167] = 00001011
+IM[168] = 00001110
+IM[169] = 10000000
+IM[170] = 00000000
+IM[171] = 00000011
+IM[172] = 10000000
+IM[173] = 00000000
+IM[174] = 00000000
+IM[175] = 00000000
+IM[176] = 10001010
+IM[177] = 00001000
+IM[178] = 01000000
+IM[179] = 00000000
+IM[180] = 11001010
+IM[181] = 00100000
+IM[182] = 00000000
+IM[183] = 00001010
+IM[184] = 10010100
+IM[185] = 00000010
+IM[186] = 10100000
+IM[187] = 00000100
+IM[188] = 10001010
+IM[189] = 10010000
+IM[190] = 00100000
+IM[191] = 00000100
+IM[192] = 00100010
+IM[193] = 10000000
+IM[194] = 00000000
+IM[195] = 00000010
+IM[196] = 10001010
+IM[197] = 00010000
+IM[198] = 00100000
+IM[199] = 00001111
+IM[200] = 11001010
+IM[201] = 00100000
+IM[202] = 00000000
+IM[203] = 00001010
+IM[204] = 00010000
+IM[205] = 10000000
+IM[206] = 00000000
+IM[207] = 00000000
+IM[208] = 10000000
+IM[209] = 00000000
+IM[210] = 00000000
+IM[211] = 00000000
+IM[212] = 10100000
+IM[213] = 00000000
+IM[214] = 00000000
+IM[215] = 00000000
+IM[216] = 11000000
+IM[217] = 00000000
+IM[218] = 00000000
+IM[219] = 00000000
+IM[220] = 11111111
+IM[221] = 11111111
+IM[222] = 11111111
+IM[223] = 11110101
+IM[224] = xxxxxxxx
+IM[225] = xxxxxxxx
+IM[226] = xxxxxxxx
+IM[227] = xxxxxxxx
+IM[228] = xxxxxxxx
+IM[229] = xxxxxxxx
+IM[230] = xxxxxxxx
+IM[231] = xxxxxxxx
+IM[232] = xxxxxxxx
+IM[233] = xxxxxxxx
+IM[234] = xxxxxxxx
+IM[235] = xxxxxxxx
+IM[236] = xxxxxxxx
+IM[237] = xxxxxxxx
+IM[238] = xxxxxxxx
+IM[239] = xxxxxxxx
+IM[240] = xxxxxxxx
+IM[241] = xxxxxxxx
+IM[242] = xxxxxxxx
+IM[243] = xxxxxxxx
+IM[244] = xxxxxxxx
+IM[245] = xxxxxxxx
+IM[246] = xxxxxxxx
+IM[247] = xxxxxxxx
+IM[248] = xxxxxxxx
+IM[249] = xxxxxxxx
+IM[250] = xxxxxxxx
+IM[251] = xxxxxxxx
+IM[252] = xxxxxxxx
+IM[253] = xxxxxxxx
+IM[254] = xxxxxxxx
+IM[255] = xxxxxxxx
+IM[256] = xxxxxxxx
+IM[257] = xxxxxxxx
+IM[258] = xxxxxxxx
+IM[259] = xxxxxxxx
+IM[260] = xxxxxxxx
+IM[261] = xxxxxxxx
+IM[262] = xxxxxxxx
+IM[263] = xxxxxxxx
+IM[264] = xxxxxxxx
+IM[265] = xxxxxxxx
+IM[266] = xxxxxxxx
+IM[267] = xxxxxxxx
+IM[268] = xxxxxxxx
+IM[269] = xxxxxxxx
+IM[270] = xxxxxxxx
+IM[271] = xxxxxxxx
+IM[272] = xxxxxxxx
+IM[273] = xxxxxxxx
+IM[274] = xxxxxxxx
+IM[275] = xxxxxxxx
+IM[276] = xxxxxxxx
+IM[277] = xxxxxxxx
+IM[278] = xxxxxxxx
+IM[279] = xxxxxxxx
+IM[280] = xxxxxxxx
+IM[281] = xxxxxxxx
+IM[282] = xxxxxxxx
+IM[283] = xxxxxxxx
+IM[284] = xxxxxxxx
+IM[285] = xxxxxxxx
+IM[286] = xxxxxxxx
+IM[287] = xxxxxxxx
+IM[288] = xxxxxxxx
+IM[289] = xxxxxxxx
+IM[290] = xxxxxxxx
+IM[291] = xxxxxxxx
+IM[292] = xxxxxxxx
+IM[293] = xxxxxxxx
+IM[294] = xxxxxxxx
+IM[295] = xxxxxxxx
+IM[296] = xxxxxxxx
+IM[297] = xxxxxxxx
+IM[298] = xxxxxxxx
+IM[299] = xxxxxxxx
+IM[300] = xxxxxxxx
+IM[301] = xxxxxxxx
+IM[302] = xxxxxxxx
+IM[303] = xxxxxxxx
+IM[304] = xxxxxxxx
+IM[305] = xxxxxxxx
+IM[306] = xxxxxxxx
+IM[307] = xxxxxxxx
+IM[308] = xxxxxxxx
+IM[309] = xxxxxxxx
+IM[310] = xxxxxxxx
+IM[311] = xxxxxxxx
+IM[312] = xxxxxxxx
+IM[313] = xxxxxxxx
+IM[314] = xxxxxxxx
+IM[315] = xxxxxxxx
+IM[316] = xxxxxxxx
+IM[317] = xxxxxxxx
+IM[318] = xxxxxxxx
+IM[319] = xxxxxxxx
+IM[320] = xxxxxxxx
+IM[321] = xxxxxxxx
+IM[322] = xxxxxxxx
+IM[323] = xxxxxxxx
+IM[324] = xxxxxxxx
+IM[325] = xxxxxxxx
+IM[326] = xxxxxxxx
+IM[327] = xxxxxxxx
+IM[328] = xxxxxxxx
+IM[329] = xxxxxxxx
+IM[330] = xxxxxxxx
+IM[331] = xxxxxxxx
+IM[332] = xxxxxxxx
+IM[333] = xxxxxxxx
+IM[334] = xxxxxxxx
+IM[335] = xxxxxxxx
+IM[336] = xxxxxxxx
+IM[337] = xxxxxxxx
+IM[338] = xxxxxxxx
+IM[339] = xxxxxxxx
+IM[340] = xxxxxxxx
+IM[341] = xxxxxxxx
+IM[342] = xxxxxxxx
+IM[343] = xxxxxxxx
+IM[344] = xxxxxxxx
+IM[345] = xxxxxxxx
+IM[346] = xxxxxxxx
+IM[347] = xxxxxxxx
+IM[348] = xxxxxxxx
+IM[349] = xxxxxxxx
+IM[350] = xxxxxxxx
+IM[351] = xxxxxxxx
+IM[352] = xxxxxxxx
+IM[353] = xxxxxxxx
+IM[354] = xxxxxxxx
+IM[355] = xxxxxxxx
+IM[356] = xxxxxxxx
+IM[357] = xxxxxxxx
+IM[358] = xxxxxxxx
+IM[359] = xxxxxxxx
+IM[360] = xxxxxxxx
+IM[361] = xxxxxxxx
+IM[362] = xxxxxxxx
+IM[363] = xxxxxxxx
+IM[364] = xxxxxxxx
+IM[365] = xxxxxxxx
+IM[366] = xxxxxxxx
+IM[367] = xxxxxxxx
+IM[368] = xxxxxxxx
+IM[369] = xxxxxxxx
+IM[370] = xxxxxxxx
+IM[371] = xxxxxxxx
+IM[372] = xxxxxxxx
+IM[373] = xxxxxxxx
+IM[374] = xxxxxxxx
+IM[375] = xxxxxxxx
+IM[376] = xxxxxxxx
+IM[377] = xxxxxxxx
+IM[378] = xxxxxxxx
+IM[379] = xxxxxxxx
+IM[380] = xxxxxxxx
+IM[381] = xxxxxxxx
+IM[382] = xxxxxxxx
+IM[383] = xxxxxxxx
+IM[384] = xxxxxxxx
+IM[385] = xxxxxxxx
+IM[386] = xxxxxxxx
+IM[387] = xxxxxxxx
+IM[388] = xxxxxxxx
+IM[389] = xxxxxxxx
+IM[390] = xxxxxxxx
+IM[391] = xxxxxxxx
+IM[392] = xxxxxxxx
+IM[393] = xxxxxxxx
+IM[394] = xxxxxxxx
+IM[395] = xxxxxxxx
+IM[396] = xxxxxxxx
+IM[397] = xxxxxxxx
+IM[398] = xxxxxxxx
+IM[399] = xxxxxxxx
+IM[400] = xxxxxxxx
+IM[401] = xxxxxxxx
+IM[402] = xxxxxxxx
+IM[403] = xxxxxxxx
+IM[404] = xxxxxxxx
+IM[405] = xxxxxxxx
+IM[406] = xxxxxxxx
+IM[407] = xxxxxxxx
+IM[408] = xxxxxxxx
+IM[409] = xxxxxxxx
+IM[410] = xxxxxxxx
+IM[411] = xxxxxxxx
+IM[412] = xxxxxxxx
+IM[413] = xxxxxxxx
+IM[414] = xxxxxxxx
+IM[415] = xxxxxxxx
+IM[416] = xxxxxxxx
+IM[417] = xxxxxxxx
+IM[418] = xxxxxxxx
+IM[419] = xxxxxxxx
+IM[420] = xxxxxxxx
+IM[421] = xxxxxxxx
+IM[422] = xxxxxxxx
+IM[423] = xxxxxxxx
+IM[424] = xxxxxxxx
+IM[425] = xxxxxxxx
+IM[426] = xxxxxxxx
+IM[427] = xxxxxxxx
+IM[428] = xxxxxxxx
+IM[429] = xxxxxxxx
+IM[430] = xxxxxxxx
+IM[431] = xxxxxxxx
+IM[432] = xxxxxxxx
+IM[433] = xxxxxxxx
+IM[434] = xxxxxxxx
+IM[435] = xxxxxxxx
+IM[436] = xxxxxxxx
+IM[437] = xxxxxxxx
+IM[438] = xxxxxxxx
+IM[439] = xxxxxxxx
+IM[440] = xxxxxxxx
+IM[441] = xxxxxxxx
+IM[442] = xxxxxxxx
+IM[443] = xxxxxxxx
+IM[444] = xxxxxxxx
+IM[445] = xxxxxxxx
+IM[446] = xxxxxxxx
+IM[447] = xxxxxxxx
+IM[448] = xxxxxxxx
+IM[449] = xxxxxxxx
+IM[450] = xxxxxxxx
+IM[451] = xxxxxxxx
+IM[452] = xxxxxxxx
+IM[453] = xxxxxxxx
+IM[454] = xxxxxxxx
+IM[455] = xxxxxxxx
+IM[456] = xxxxxxxx
+IM[457] = xxxxxxxx
+IM[458] = xxxxxxxx
+IM[459] = xxxxxxxx
+IM[460] = xxxxxxxx
+IM[461] = xxxxxxxx
+IM[462] = xxxxxxxx
+IM[463] = xxxxxxxx
+IM[464] = xxxxxxxx
+IM[465] = xxxxxxxx
+IM[466] = xxxxxxxx
+IM[467] = xxxxxxxx
+IM[468] = xxxxxxxx
+IM[469] = xxxxxxxx
+IM[470] = xxxxxxxx
+IM[471] = xxxxxxxx
+IM[472] = xxxxxxxx
+IM[473] = xxxxxxxx
+IM[474] = xxxxxxxx
+IM[475] = xxxxxxxx
+IM[476] = xxxxxxxx
+IM[477] = xxxxxxxx
+IM[478] = xxxxxxxx
+IM[479] = xxxxxxxx
+IM[480] = xxxxxxxx
+IM[481] = xxxxxxxx
+IM[482] = xxxxxxxx
+IM[483] = xxxxxxxx
+IM[484] = xxxxxxxx
+IM[485] = xxxxxxxx
+IM[486] = xxxxxxxx
+IM[487] = xxxxxxxx
+IM[488] = xxxxxxxx
+IM[489] = xxxxxxxx
+IM[490] = xxxxxxxx
+IM[491] = xxxxxxxx
+IM[492] = xxxxxxxx
+IM[493] = xxxxxxxx
+IM[494] = xxxxxxxx
+IM[495] = xxxxxxxx
+IM[496] = xxxxxxxx
+IM[497] = xxxxxxxx
+IM[498] = xxxxxxxx
+IM[499] = xxxxxxxx
+IM[500] = xxxxxxxx
+IM[501] = xxxxxxxx
+IM[502] = xxxxxxxx
+IM[503] = xxxxxxxx
+IM[504] = xxxxxxxx
+IM[505] = xxxxxxxx
+IM[506] = xxxxxxxx
+IM[507] = xxxxxxxx
+IM[508] = xxxxxxxx
+IM[509] = xxxxxxxx
+IM[510] = xxxxxxxx
+=== Instruction and data Memory cargada ===
+
+PC=x | r1=0 r2=0 r3=0 r4=0 r5=0 r8=0 r10=0 r11=0 r12=0 r15=0 
+PC=0 | r1=0 r2=0 r3=0 r4=0 r5=0 r8=0 r10=0 r11=0 r12=0 r15=0 
+PC=4 | r1=0 r2=0 r3=0 r4=0 r5=0 r8=0 r10=0 r11=0 r12=0 r15=0 
+PC=8 | r1=0 r2=0 r3=0 r4=0 r5=0 r8=0 r10=0 r11=0 r12=0 r15=0 
+PC=12 | r1=0 r2=0 r3=0 r4=0 r5=0 r8=0 r10=0 r11=0 r12=0 r15=0 
+PC=16 | r1=0 r2=0 r3=0 r4=0 r5=0 r8=0 r10=0 r11=0 r12=0 r15=0 
+PC=20 | r1=34 r2=0 r3=0 r4=0 r5=0 r8=0 r10=0 r11=0 r12=0 r15=0 
+PC=24 | r1=34 r2=0 r3=0 r4=220 r5=0 r8=0 r10=0 r11=0 r12=0 r15=0 
+PC=28 | r1=34 r2=0 r3=0 r4=220 r5=0 r8=0 r10=220 r11=0 r12=0 r15=0 
+PC=32 | r1=34 r2=0 r3=4294967285 r4=220 r5=0 r8=0 r10=220 r11=0 r12=0 r15=0 
+PC=36 | r1=34 r2=0 r3=4294967285 r4=220 r5=0 r8=0 r10=224 r11=0 r12=0 r15=0 
+PC=40 | r1=34 r2=23 r3=4294967285 r4=220 r5=0 r8=0 r10=224 r11=0 r12=0 r15=0 
+PC=44 | r1=34 r2=23 r3=4294967285 r4=220 r5=23 r8=0 r10=224 r11=0 r12=0 r15=0 
+PC=48 | r1=34 r2=23 r3=4294967285 r4=220 r5=23 r8=0 r10=224 r11=0 r12=0 r15=0 
+PC=52 | r1=34 r2=23 r3=4294967285 r4=220 r5=23 r8=0 r10=228 r11=0 r12=0 r15=0 
+PC=56 | r1=34 r2=23 r3=4294967285 r4=220 r5=11 r8=0 r10=228 r11=0 r12=0 r15=0 
+PC=60 | r1=34 r2=23 r3=4294967285 r4=220 r5=11 r8=0 r10=228 r11=0 r12=0 r15=0 
+PC=64 | r1=34 r2=23 r3=4294967285 r4=220 r5=11 r8=0 r10=232 r11=0 r12=0 r15=0 
+PC=68 | r1=34 r2=23 r3=4294967285 r4=220 r5=1010571264 r8=0 r10=232 r11=0 r12=0 r15=0 
+PC=72 | r1=34 r2=23 r3=4294967285 r4=220 r5=1010571264 r8=0 r10=232 r11=0 r12=0 r15=0 
+PC=76 | r1=34 r2=23 r3=4294967285 r4=220 r5=1010571264 r8=0 r10=236 r11=0 r12=0 r15=0 
+PC=80 | r1=34 r2=23 r3=4294967285 r4=220 r5=4294967294 r8=0 r10=236 r11=0 r12=0 r15=0 
+PC=84 | r1=34 r2=23 r3=4294967285 r4=220 r5=4294967294 r8=0 r10=236 r11=0 r12=0 r15=0 
+PC=88 | r1=34 r2=23 r3=4294967285 r4=220 r5=4294967294 r8=0 r10=240 r11=0 r12=0 r15=0 
+PC=92 | r1=34 r2=23 r3=4294967285 r4=220 r5=4294967208 r8=0 r10=240 r11=0 r12=0 r15=0 
+PC=96 | r1=34 r2=23 r3=4294967285 r4=220 r5=4294967208 r8=0 r10=240 r11=0 r12=0 r15=0 
+PC=100 | r1=34 r2=23 r3=4294967285 r4=220 r5=4294967208 r8=0 r10=244 r11=0 r12=0 r15=0 
+PC=104 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=0 r10=244 r11=0 r12=0 r15=0 
+PC=112 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=0 r10=244 r11=0 r12=0 r15=0 
+PC=116 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=0 r10=248 r11=0 r12=0 r15=0 
+PC=120 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=0 r10=248 r11=0 r12=0 r15=0 
+PC=124 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=36 r10=248 r11=0 r12=0 r15=0 
+PC=128 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=36 r10=248 r11=0 r12=0 r15=0 
+PC=36 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=36 r10=248 r11=0 r12=0 r15=36 
+PC=40 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=36 r10=248 r11=0 r12=0 r15=36 
+PC=44 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=36 r10=248 r11=0 r12=0 r15=36 
+PC=48 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=36 r10=252 r11=0 r12=0 r15=36 
+PC=52 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=36 r10=252 r11=0 r12=0 r15=36 
+PC=56 | r1=34 r2=23 r3=4294967285 r4=220 r5=11 r8=36 r10=252 r11=0 r12=0 r15=36 
+PC=60 | r1=34 r2=23 r3=4294967285 r4=220 r5=11 r8=36 r10=252 r11=0 r12=0 r15=36 
+PC=64 | r1=34 r2=23 r3=4294967285 r4=220 r5=11 r8=36 r10=256 r11=0 r12=0 r15=36 
+PC=68 | r1=34 r2=23 r3=4294967285 r4=220 r5=1010571264 r8=36 r10=256 r11=0 r12=0 r15=36 
+PC=72 | r1=34 r2=23 r3=4294967285 r4=220 r5=1010571264 r8=36 r10=256 r11=0 r12=0 r15=36 
+PC=76 | r1=34 r2=23 r3=4294967285 r4=220 r5=1010571264 r8=36 r10=260 r11=0 r12=0 r15=36 
+PC=80 | r1=34 r2=23 r3=4294967285 r4=220 r5=4294967294 r8=36 r10=260 r11=0 r12=0 r15=36 
+PC=84 | r1=34 r2=23 r3=4294967285 r4=220 r5=4294967294 r8=36 r10=260 r11=0 r12=0 r15=36 
+PC=88 | r1=34 r2=23 r3=4294967285 r4=220 r5=4294967294 r8=36 r10=264 r11=0 r12=0 r15=36 
+PC=92 | r1=34 r2=23 r3=4294967285 r4=220 r5=4294967208 r8=36 r10=264 r11=0 r12=0 r15=36 
+PC=96 | r1=34 r2=23 r3=4294967285 r4=220 r5=4294967208 r8=36 r10=264 r11=0 r12=0 r15=36 
+PC=100 | r1=34 r2=23 r3=4294967285 r4=220 r5=4294967208 r8=36 r10=268 r11=0 r12=0 r15=36 
+PC=104 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=36 r10=268 r11=0 r12=0 r15=36 
+PC=112 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=36 r10=268 r11=0 r12=0 r15=36 
+PC=116 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=36 r10=272 r11=0 r12=0 r15=36 
+PC=120 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=36 r10=272 r11=0 r12=0 r15=0 
+PC=124 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=36 r10=272 r11=0 r12=0 r15=0 
+PC=128 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=36 r10=272 r11=0 r12=0 r15=0 
+PC=36 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=36 r10=272 r11=0 r12=0 r15=36 
+PC=40 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=36 r10=272 r11=0 r12=0 r15=36 
+PC=44 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=36 r10=272 r11=0 r12=0 r15=36 
+PC=48 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=36 r10=276 r11=0 r12=0 r15=36 
+Contenido de las localizaciones de la 224 a la 263 (bytes):
+00000000 00000000 00000000 00010111 
+00000000 00000000 00000000 00001011 
+00111100 00111100 00011000 00000000 
+11111111 11111111 11111111 11111110 
+11111111 11111111 11111111 10101000 
+00011111 11111111 11111111 11111110 
+00000000 00000000 00000000 00100100 
+00000000 00000000 00000000 00001011 
+00111100 00111100 00011000 00000000 
+11111111 11111111 11111111 11111110 
+PC=52 | r1=34 r2=23 r3=4294967285 r4=220 r5=536870910 r8=36 r10=276 r11=0 r12=0 r15=36 
+Pipeline.v:833: $finish called at 244000 (1ps)

@@ -289,7 +289,7 @@ module Registro_EX_MEM(
     input        clk,
     input        R,      
     input [4:0]  ex_rd,   
-    input        load_ex,
+    input [1:0]   load_ex,
     input        rf_le_ex,
     input        E_ex,
     input  [1:0] size_ex,
@@ -297,9 +297,11 @@ module Registro_EX_MEM(
     input        se_ex,
     input[31:0] alu_out_ex,
     input [31:0] PC_D_ex,
+    input [31:0] ex_sethi_imm22,
+    output reg [31:0] mem_sethi_imm22,
 
     output reg [31:0] df_a_mem,
-    output reg        load_mem,
+    output reg [1:0]  load_mem,
     output reg        rf_le_mem,
     output reg [4:0]  mem_rd,
     output reg        E_mem,
@@ -311,7 +313,8 @@ module Registro_EX_MEM(
 );
     always @(posedge clk) begin
         if (R) begin
-            load_mem   <= 0;
+            mem_sethi_imm22 <= 32'b0;
+            load_mem   <= 2'b00;
             rf_le_mem  <= 0;
             E_mem      <= 0;
             size_mem   <= 2'b00;
@@ -321,6 +324,7 @@ module Registro_EX_MEM(
             alu_out_mem<= 32'b0;
             PC_D_mem   <= 32'b0;
         end else begin
+            mem_sethi_imm22 <= ex_sethi_imm22;
             load_mem   <= load_ex;
             rf_le_mem  <= rf_le_ex;
             E_mem      <= E_ex;
