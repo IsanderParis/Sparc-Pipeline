@@ -820,7 +820,11 @@ module Registro_ID_EX(
     input [4:0]  rd_in,
     input [21:0] imm22_in,
     input [31:0] ID_TAG,
-    input[21:0] id_sethi_imm,
+    input [21:0] id_sethi_imm,
+    input [31:0] ID_PC_in,
+    input        ID_JUMPL_in,
+    input        ID_BRANCH_in,
+    input  [3:0] ID_COND_in,
          
 
     // ======== Outputs hacia EX ========
@@ -840,7 +844,11 @@ module Registro_ID_EX(
     output reg [1:0] EX_PC_SEL_out,
     output reg [21:0] imm22_out,
     output reg [31:0] EX_TAG,
-    output reg [21:0] ex_imm_sethi
+    output reg [21:0] ex_imm_sethi,
+    output reg [31:0] EX_PC_out,
+    output reg       EX_JUMPL_out,
+    output reg       EX_BRANCH_out,
+    output reg [3:0] EX_COND_out
         
 );
 
@@ -865,8 +873,11 @@ module Registro_ID_EX(
             EX_PC_SEL_out  <= 2'b00;
             imm22_out      <= 22'b0;
             EX_TAG         <= 32'b0;
-            ex_imm_sethi <= 22'b0;
-              
+            ex_imm_sethi   <= 22'b0;
+            EX_PC_out      <= 32'b0;
+            EX_JUMPL_out   <= 1'b0;
+            EX_BRANCH_out  <= 1'b0;
+            EX_COND_out    <= 4'b0;
         end
         
         else begin
@@ -888,8 +899,11 @@ module Registro_ID_EX(
             EX_PC_SEL_out  <= EX_PC_SEL_in;
             imm22_out      <= imm22_in;
             EX_TAG         <= ID_TAG;
-            ex_imm_sethi <= id_sethi_imm;
-               
+            ex_imm_sethi   <= id_sethi_imm;
+            EX_PC_out      <= ID_PC_in;
+            EX_JUMPL_out  <= ID_JUMPL_in;
+            EX_BRANCH_out <= ID_BRANCH_in;
+            EX_COND_out   <= ID_COND_in;
         end
     end
 

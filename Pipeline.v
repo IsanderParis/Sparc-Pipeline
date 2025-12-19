@@ -143,6 +143,8 @@ wire [31:0] ex_sethi;
 assign ID_IMM_sethi = disp22_raw;
 assign ex_sethi = EX_sethi_imm22 << 10;
 
+wire [31:0] EX_CALL_LINK_WIRE;
+assign EX_CALL_LINK_WIRE = EX_PC_WIRE;
 
 
 wire [3:0] EX_ALU_OP_WIRE, EX_SOH_IS_WIRE;
@@ -180,10 +182,16 @@ wire EX_E_WIRE;
 wire [1:0] EX_LOAD_WIRE;
 wire [1:0] EX_MEM_SIZE_WIRE;
 wire EX_SE_WIRE;                // desde ID/EX hacia EX
+wire EX_JUMPL_WIRE;
+wire EX_BRANCH_WIRE;
+wire [3:0] EX_COND_WIRE;
 
 //dhdu
 wire NOP_STALL_WIRE, DHDU_LE_WIRE;
 // assign DHDU_LE_WIRE = 1'b1; // deshabilitado para pruebas
+
+wire KILL_ID_WIRE;
+assign KILL_ID_WIRE = NOP_STALL_WIRE | (EX_BRANCH_WIRE & clr_IF_WIRE);
 
 //=========================
 // MEM stage
@@ -222,8 +230,8 @@ MUX_IF MUX_IF_0 (
     .npc_in(NPC_WIRE),
     .alu_out(EX_MUX_ALU_CALL),          
     .ta(EX_TAG_wire),               
-    .sel(PC_SEL_WIRE),              
-    .mux_out(IF_MUX_WIRE)          
+    .sel(EX_CH_PC_SEL),              
+    .mux_out(IF_MUX_WIRE)
 );
 PC_IF PC_IF_0 (
     .clk(CLOCK),
@@ -344,7 +352,7 @@ MUX_DF_PC_D MUX_DF_C(
 
 MUX_ID_STALL MUX_ID_STALL_0 (
     //in
-    .ID_MUX_sel(NOP_STALL_WIRE),
+    .ID_MUX_sel(KILL_ID_WIRE),
 
     .ID_MUX_ALU_OP_in(CU_ALU_OP_WIRE),
     .ID_MUX_SOH_OP_in(CU_SOH_OP_WIRE),
@@ -396,6 +404,11 @@ Registro_ID_EX REG_ID_EX_0 (
     .ID_TAG(ID_TAG_WIRE),
     .EX_PC_SEL_in(EX_CH_PC_SEL),
     .id_sethi_imm(ID_IMM_sethi),
+    .ID_PC_in(ID_PC_WIRE),
+    .EX_PC_out(EX_PC_WIRE),
+    .ID_JUMPL_in(STALL_JUMPL_WIRE),
+    .ID_BRANCH_in(STALL_BRANCH_WIRE),
+    .ID_COND_in(ID_COND_WIRE),
 
     // operandos
     .DF_A(DF_A_OUT_WIRE),
@@ -429,19 +442,21 @@ Registro_ID_EX REG_ID_EX_0 (
     .B_out(EX_SOH_R_WIRE),
     .C_out(EX_PC_D_WIRE),
     .rd_out(EX_RD_WIRE),
-    .EX_PC_SEL_out(PC_SEL_WIRE)
-    
+    .EX_PC_SEL_out(PC_SEL_WIRE),
+    .EX_JUMPL_out(EX_JUMPL_WIRE),
+    .EX_BRANCH_out(EX_BRANCH_WIRE),
+    .EX_COND_out(EX_COND_WIRE)
 );
 
 //EX Stage
 
 Control_Handler Ch_0(
     //in
-    .ID_JUMPL(STALL_JUMPL_WIRE),
-    .ID_BRANCH(STALL_BRANCH_WIRE),
-    .ID_CALL(STALL_CALL_WIRE),
+    .ID_JUMPL(EX_JUMPL_WIRE),
+    .ID_BRANCH(EX_BRANCH_WIRE),
+    .ID_CALL(EX_CALL_WIRE),
     .a(EX_a_WIRE),
-    .ID_COND(ID_COND_WIRE),
+    .ID_COND(EX_COND_WIRE),
 
     .MUX_N(EX_CH_N_WIRE),
     .MUX_Z(EX_CH_Z_WIRE),
@@ -539,7 +554,7 @@ Second_Operand_Handler SOH_0(
 MUX_ALU_CALL MUX_ALU_CALL_0(
     //in
     .ALU_OUT(EX_ALU_OUT_WIRE),
-    .PC_D(EX_PC_D_WIRE),
+    .PC_D(EX_CALL_LINK_WIRE),
     .EX_CALL(EX_CALL_WIRE),
 
     //out
@@ -874,7 +889,7 @@ end
                 pipeline.RF_ID_0.q10,
                 pipeline.RF_ID_0.q11,
                 pipeline.RF_ID_0.q12,
-                pipeline.RF_ID_0.q15,);
+                pipeline.RF_ID_0.q15);
     end
 
 endmodule

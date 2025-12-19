@@ -92,10 +92,17 @@ module Registro_IF_ID(
     output reg [31:0] pc_out         // salida hacia la etapa ID
 );
     always @(posedge clk) begin
-        if (R)
+        if (R) begin
             instruction_out <= 32'b0;   // limpia en reset
-        else if (LE)
+            pc_out <= 32'b0;
+        end 
+        else if (CH_clear) begin
+        instruction_out <= 32'b0;   // NOP
+        pc_out          <= 32'b0;
+        end 
+        else if (LE) begin 
             instruction_out <= instruction_in; // guarda la nueva instrucción
             pc_out <= pc_in;
+        end
     end
 endmodule
