@@ -1,15 +1,16 @@
 
 module Target_Address_Generator (
     input  [31:0] PC,
-    input  [29:0] OFFSET,   
+    input  [31:0] OFFSET,   
     output [31:0] TA
 );
 
     // Extensión de signo de 30 → 32 bits
-    wire signed [31:0] OFFSET_EXT =
-        {{2{OFFSET[29]}}, OFFSET};
+    // wire signed [31:0] OFFSET_EXT =
+    //     {{2{OFFSET[29]}}, OFFSET};
 
-    assign TA = PC + OFFSET_EXT;
+    // assign TA = PC + OFFSET_EXT;
+    assign TA = PC + $signed(OFFSET);
 
 endmodule
 
@@ -816,7 +817,7 @@ module Registro_ID_EX(
     input        ID_RW_DM_in,
     input        ID_SE_in,
     input [31:0] DF_A, DF_B, DF_C,  
-    input [1:0]  EX_PC_SEL_in,
+    // input [1:0]  EX_PC_SEL_in,
     input [4:0]  rd_in,
     input [21:0] imm22_in,
     input [31:0] ID_TAG,
@@ -841,7 +842,7 @@ module Registro_ID_EX(
     output reg       EX_SE_out,
     output reg [31:0] A_out, B_out, C_out,
     output reg [4:0] rd_out,
-    output reg [1:0] EX_PC_SEL_out,
+    // output reg [1:0] EX_PC_SEL_out,
     output reg [21:0] imm22_out,
     output reg [31:0] EX_TAG,
     output reg [21:0] ex_imm_sethi,
@@ -870,7 +871,7 @@ module Registro_ID_EX(
             B_out          <= 32'b0;
             C_out          <= 32'b0;
             rd_out         <= 5'b0;
-            EX_PC_SEL_out  <= 2'b00;
+            // EX_PC_SEL_out  <= 2'b00;
             imm22_out      <= 22'b0;
             EX_TAG         <= 32'b0;
             ex_imm_sethi   <= 22'b0;
@@ -896,7 +897,7 @@ module Registro_ID_EX(
             B_out          <= DF_B;
             C_out          <= DF_C;
             rd_out         <= rd_in;
-            EX_PC_SEL_out  <= EX_PC_SEL_in;
+            // EX_PC_SEL_out  <= EX_PC_SEL_in;
             imm22_out      <= imm22_in;
             EX_TAG         <= ID_TAG;
             ex_imm_sethi   <= id_sethi_imm;

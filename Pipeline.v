@@ -86,7 +86,7 @@ wire [4:0] ID_MUX_RD_WIRE; // este es mi out del mux
 wire [4:0] ID_RD_WIRE;
 wire [4:0] ID_RS1_WIRE;
 wire [4:0] ID_RS2_WIRE;
-wire [29:0] ID_OFFSET_WIRE;
+wire [31:0] ID_OFFSET_WIRE;
 wire [3:0]  ID_COND_WIRE;
 wire [12:0] ID_SIMM13_WIRE;
 wire [21:0] ID_imm22;
@@ -154,6 +154,7 @@ wire [4:0] EX_RD_WIRE;
 wire [1:0] EX_CH_PC_SEL;
 wire [1:0] PC_SEL_WIRE;
 wire clr_IF_WIRE;
+wire KILL_ID_FROM_CH_WIRE;
 
 //señales ICC que van al CH
 wire EX_CH_Z_WIRE; 
@@ -191,7 +192,7 @@ wire NOP_STALL_WIRE, DHDU_LE_WIRE;
 // assign DHDU_LE_WIRE = 1'b1; // deshabilitado para pruebas
 
 wire KILL_ID_WIRE;
-assign KILL_ID_WIRE = NOP_STALL_WIRE | (EX_BRANCH_WIRE & clr_IF_WIRE);
+assign KILL_ID_WIRE = NOP_STALL_WIRE | KILL_ID_FROM_CH_WIRE;
 
 //=========================
 // MEM stage
@@ -402,7 +403,7 @@ Registro_ID_EX REG_ID_EX_0 (
     .ID_RW_DM_in(STALL_RW_WIRE),
     .ID_SE_in(STALL_SE_WIRE),
     .ID_TAG(ID_TAG_WIRE),
-    .EX_PC_SEL_in(EX_CH_PC_SEL),
+    // .EX_PC_SEL_in(EX_CH_PC_SEL),
     .id_sethi_imm(ID_IMM_sethi),
     .ID_PC_in(ID_PC_WIRE),
     .EX_PC_out(EX_PC_WIRE),
@@ -442,7 +443,7 @@ Registro_ID_EX REG_ID_EX_0 (
     .B_out(EX_SOH_R_WIRE),
     .C_out(EX_PC_D_WIRE),
     .rd_out(EX_RD_WIRE),
-    .EX_PC_SEL_out(PC_SEL_WIRE),
+    // .EX_PC_SEL_out(PC_SEL_WIRE),
     .EX_JUMPL_out(EX_JUMPL_WIRE),
     .EX_BRANCH_out(EX_BRANCH_WIRE),
     .EX_COND_out(EX_COND_WIRE)
@@ -465,7 +466,8 @@ Control_Handler Ch_0(
 
     //out
     .PC_SEL(EX_CH_PC_SEL),
-    .clr_IF(clr_IF_WIRE)
+    .clr_IF(clr_IF_WIRE),
+    .kill_ID(KILL_ID_FROM_CH_WIRE)
 
 );
 

@@ -9,13 +9,15 @@ module Control_Handler(
     input MUX_N, MUX_Z, MUX_V, MUX_C,
 
     output reg [1:0] PC_SEL,
-    output reg       clr_IF
+    output reg       clr_IF,
+    output reg       kill_ID 
 );
 
 always @(*) begin
     // Default
     PC_SEL = 2'b00;  // NPC
     clr_IF = 1'b0;
+    kill_ID = 1'b0;
 
     // ===========================
     // JMPL
@@ -37,28 +39,43 @@ always @(*) begin
     // BRANCH
     // ===========================
     else if (ID_BRANCH) begin
-        // Evaluación SPARC real:
-        // N, Z, V, C
-        case (ID_COND)
-            4'b0000: begin end                      // BN → nunca brincar
-            4'b0001: if (MUX_Z) begin PC_SEL=2'b01; clr_IF=1; end     // BE
-            4'b0010: if (MUX_Z || (MUX_N ^ MUX_V)) begin PC_SEL=2'b01; clr_IF=1; end  // BLE
-            4'b0011: if (MUX_N ^ MUX_V) begin PC_SEL=2'b01; clr_IF=1; end // BL
-            4'b0100: if (MUX_C || MUX_Z) begin PC_SEL=2'b01; clr_IF=1; end // BLEU
-            4'b0101: if (MUX_C) begin PC_SEL=2'b01; clr_IF=1; end          // BCS
-            4'b0110: if (MUX_N) begin PC_SEL=2'b01; clr_IF=1; end          // BNEG
-            4'b0111: if (MUX_V) begin PC_SEL=2'b01; clr_IF=1; end          // BVS
-            4'b1000: begin PC_SEL=2'b01; clr_IF=1; end                     // BA (always)
-            4'b1001: if (!MUX_Z) begin PC_SEL=2'b01; clr_IF=1; end         // BNE
-            4'b1010: if (!MUX_Z && !(MUX_N ^ MUX_V)) begin PC_SEL=2'b01; clr_IF=1; end // BG
-            4'b1011: if (!(MUX_N ^ MUX_V)) begin PC_SEL=2'b01; clr_IF=1; end // BGE
-            4'b1100: if (!MUX_Z && !MUX_C) begin PC_SEL=2'b01; clr_IF=1; end // BGU
-            4'b1101: if (!MUX_C) begin PC_SEL=2'b01; clr_IF=1; end          // BCC
-            4'b1110: if (!MUX_N) begin PC_SEL=2'b01; clr_IF=1; end          // BPOS
-            4'b1111: if (!MUX_V) begin PC_SEL=2'b01; clr_IF=1; end          // BVC
-        endcase
-    end
+        reg taken;
+        taken = 1'b0;
 
+    // Evaluación SPARC:
+        case (ID_COND)
+            4'b0000: taken = 1'b0;                          // BN
+            4'b0001: taken = (MUX_Z);                       // BE
+            4'b0010: taken = (MUX_Z || (MUX_N ^ MUX_V));     // BLE
+            4'b0011: taken = (MUX_N ^ MUX_V);                // BL
+            4'b0100: taken = (MUX_C || MUX_Z);               // BLEU
+            4'b0101: taken = (MUX_C);                        // BCS
+            4'b0110: taken = (MUX_N);                        // BNEG
+            4'b0111: taken = (MUX_V);                        // BVS
+            4'b1000: taken = 1'b1;                           // BA
+            4'b1001: taken = (!MUX_Z);                       // BNE
+            4'b1010: taken = (!MUX_Z && !(MUX_N ^ MUX_V));    // BG
+            4'b1011: taken = (!(MUX_N ^ MUX_V));              // BGE
+            4'b1100: taken = (!MUX_Z && !MUX_C);              // BGU
+            4'b1101: taken = (!MUX_C);                        // BCC
+            4'b1110: taken = (!MUX_N);                        // BPOS
+            4'b1111: taken = (!MUX_V);                        // BVC
+            default: taken = 1'b0;
+        endcase
+
+        if (taken) begin
+            // Branch taken: redirige a TA y flush la instrucción después del delay-slot
+            PC_SEL = 2'b01;
+            clr_IF = 1'b1;
+            kill_ID = 1'b0;   // OJO: el delay-slot SÍ se ejecuta cuando taken
+        end else begin
+            // Branch NOT taken:
+            // Si a=1 (annul), entonces el delay-slot debe convertirse en NOP (matar ID->EX)
+            PC_SEL = 2'b00;
+            clr_IF = 1'b0;
+            kill_ID = a;      // <<< ANNUL: mata el delay-slot
+        end
+    end
 end
 
 endmodule
