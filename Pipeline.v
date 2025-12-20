@@ -523,6 +523,7 @@ Data_Hazard_Detection_Unit DHDU_0(
 
     //out
     .LE_IF(DHDU_LE_WIRE),
+    .EX_LOAD(EX_LOAD_WIRE),  
     // .LE_IF(1'b1), // deshabilitado para pruebas
     .NOP_STALL(NOP_STALL_WIRE),
     .SEL_A(DF_Sel_A_WIRE),
@@ -892,6 +893,13 @@ end
                 pipeline.RF_ID_0.q11,
                 pipeline.RF_ID_0.q12,
                 pipeline.RF_ID_0.q15);
+
+            $display("DM WRITE: A=%0d DI=%h SIZE=%b E=%b RW=%b", 
+            pipeline.DM_0.A_in, 
+            pipeline.DM_0.DI, 
+            pipeline.DM_0.Size, 
+            pipeline.DM_0.E, 
+            pipeline.DM_0.RW);
     end
 
 endmodule

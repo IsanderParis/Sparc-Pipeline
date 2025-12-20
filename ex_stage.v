@@ -147,6 +147,8 @@ module Data_Hazard_Detection_Unit(
     input  [4:0] EX_RD, MEM_RD, WB_RD,
     input        EX_RF_LE, MEM_RF_LE, WB_RF_LE,
 
+    input  [1:0] EX_LOAD,          // <-- NUEVO: tipo de “writeback source” en EX
+
     output reg   LE_IF,
     output reg   NOP_STALL,
     output reg [1:0] SEL_A,
@@ -155,25 +157,32 @@ module Data_Hazard_Detection_Unit(
 );
 
     // =====================================
-    // IF / STALL CONTROL (DESACTIVADO)
+    // STALL: SOLO para LOAD-USE (1 ciclo)
+    // EX_LOAD==2'b01 significa que el valor viene de MEM (load)
+    // Si el RD de ese load se usa inmediatamente en RA/RB/RC => stall + burbuja
     // =====================================
-    initial begin
-        LE_IF     = 1'b1;   // PC SIEMPRE avanza
-        NOP_STALL = 1'b0;   // Nunca se inserta burbuja
+    always @(*) begin
+        if (EX_RF_LE && (EX_LOAD == 2'b01) && (EX_RD != 0) &&
+            ((EX_RD == RA) || (EX_RD == RB) || (EX_RD == RC))) begin
+            LE_IF     = 1'b0;   // congela PC, NPC, IF/ID
+            NOP_STALL = 1'b1;   // mete burbuja en ID/EX (vía MUX_ID_STALL)
+        end else begin
+            LE_IF     = 1'b1;
+            NOP_STALL = 1'b0;
+        end
     end
 
     // =====================================
     // FORWARDING FOR RA
     // =====================================
     always @(*) begin
-        SEL_A = 2'b00;  // RF por defecto
-
+        SEL_A = 2'b00;
         if (EX_RF_LE && (EX_RD == RA) && (EX_RD != 0))
-            SEL_A = 2'b01;      // EX
+            SEL_A = 2'b01;
         else if (MEM_RF_LE && (MEM_RD == RA) && (MEM_RD != 0))
-            SEL_A = 2'b10;      // MEM
+            SEL_A = 2'b10;
         else if (WB_RF_LE && (WB_RD == RA) && (WB_RD != 0))
-            SEL_A = 2'b11;      // WB
+            SEL_A = 2'b11;
     end
 
     // =====================================
@@ -181,7 +190,6 @@ module Data_Hazard_Detection_Unit(
     // =====================================
     always @(*) begin
         SEL_B = 2'b00;
-
         if (EX_RF_LE && (EX_RD == RB) && (EX_RD != 0))
             SEL_B = 2'b01;
         else if (MEM_RF_LE && (MEM_RD == RB) && (MEM_RD != 0))
@@ -195,7 +203,6 @@ module Data_Hazard_Detection_Unit(
     // =====================================
     always @(*) begin
         SEL_C = 2'b00;
-
         if (EX_RF_LE && (EX_RD == RC) && (EX_RD != 0))
             SEL_C = 2'b01;
         else if (MEM_RF_LE && (MEM_RD == RC) && (MEM_RD != 0))
