@@ -893,13 +893,6 @@ end
                 pipeline.RF_ID_0.q11,
                 pipeline.RF_ID_0.q12,
                 pipeline.RF_ID_0.q15);
-
-            $display("DM WRITE: A=%0d DI=%h SIZE=%b E=%b RW=%b", 
-            pipeline.DM_0.A_in, 
-            pipeline.DM_0.DI, 
-            pipeline.DM_0.Size, 
-            pipeline.DM_0.E, 
-            pipeline.DM_0.RW);
     end
 
 endmodule

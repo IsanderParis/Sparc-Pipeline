@@ -33,6 +33,7 @@ always @(*) begin
     else if (ID_CALL) begin
         PC_SEL = 2'b01;   // TA
         clr_IF = 1'b1;
+        kill_ID = 1'b0;
     end
 
     // ===========================
